@@ -14,44 +14,51 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap">
 <style>
 /* Layout: barra fixa com marca e 5 páginas; conteúdo até 1280px; cartões arredondados no padrão âmbar do app original. */
+/* Layout: barra fixa com marca e 6 páginas; conteúdo até 1280px. Paleta: branco + amarelo (claro) e preto + amarelo (escuro).
+   Regras do UI/UX Pro Max: contraste AA, alvos de toque 44px no celular, foco visível, tokens de elevação/movimento, sem emoji como ícone. */
 :root{
-  --bg:#FFFDF9; --surface:#FFFFFF; --sunk:#FFF7ED; --raise:#FFFFFF; --line:#FBE3C3; --line-strong:#F6C98E;
-  --ink:#2D3748; --ink-strong:#0F172A; --muted:#64748B; --faint:#94A3B8;
-  --honey:#F59E0B; --honey-strong:#B45309; --honey-soft:#FEF3C7; --on-honey:#1F1300;
-  --win:#059669; --win-soft:#ECFDF5; --loss:#E11D48; --loss-soft:#FFF1F2; --tie:#4F46E5; --tie-soft:#EEF2FF;
-  --admin:#059669; --on-admin:#FFFFFF; --overlay:rgba(15,23,42,.55);
-  --shadow:0 1px 2px rgba(120,72,0,.06),0 8px 24px -12px rgba(120,72,0,.25);
+  --bg:#FFFFFF; --surface:#FFFFFF; --sunk:#FFFBEB; --raise:#FFFFFF; --line:#F0E6C8; --line-strong:#E2CF8F;
+  --ink:#1C1917; --ink-strong:#0A0A0A; --muted:#57534E; --faint:#78716C;
+  --honey:#FACC15; --honey-strong:#854D0E; --honey-soft:#FEF9C3; --on-honey:#0A0A0A;
+  --win:#047857; --win-soft:#ECFDF5; --loss:#BE123C; --loss-soft:#FFF1F2; --tie:#4338CA; --tie-soft:#EEF2FF;
+  --admin:#0A0A0A; --on-admin:#FACC15; --overlay:rgba(10,10,10,.55);
+  --e1:0 1px 2px rgba(10,10,10,.06); --e2:0 1px 2px rgba(10,10,10,.05),0 6px 18px -10px rgba(10,10,10,.18); --e3:0 24px 64px -16px rgba(10,10,10,.35);
+  --shadow:var(--e2);
+  --t-fast:150ms; --t:220ms; --ease-out:cubic-bezier(.2,.8,.2,1); --ease-in:cubic-bezier(.4,0,1,1);
+  --z-nav:30; --z-modal:60; --z-toast:90;
   --f-display:"Fredoka","Baloo 2","Trebuchet MS",system-ui,sans-serif;
   --f-body:"Plus Jakarta Sans","Segoe UI",system-ui,-apple-system,sans-serif;
   --f-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Consolas,monospace;
-  --r:16px; --r-sm:11px;
+  --r:16px; --r-sm:12px;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#0f1117; --surface:#161922; --sunk:#1a1e2b; --raise:#252b3d; --line:#283041; --line-strong:#3a4458;
-  --ink:#E2E8F0; --ink-strong:#F8FAFC; --muted:#94A3B8; --faint:#64748B;
-  --honey:#FBBF24; --honey-strong:#FCD34D; --honey-soft:#3A2A0A; --on-honey:#1F1300;
+  --bg:#0A0A0A; --surface:#141414; --sunk:#1B1B1B; --raise:#232323; --line:#2A2A2A; --line-strong:#3D3D3D;
+  --ink:#F5F5F4; --ink-strong:#FFFFFF; --muted:#A8A29E; --faint:#8C8782;
+  --honey:#FACC15; --honey-strong:#FDE047; --honey-soft:#2A2306; --on-honey:#0A0A0A;
   --win:#34D399; --win-soft:#06281D; --loss:#FB7185; --loss-soft:#33101A; --tie:#A5B4FC; --tie-soft:#1E1B4B;
-  --admin:#047857; --on-admin:#ECFDF5; --overlay:rgba(0,0,0,.7);
-  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px -14px rgba(0,0,0,.8); color-scheme:dark}}
+  --admin:#FACC15; --on-admin:#0A0A0A; --overlay:rgba(0,0,0,.72);
+  --e1:0 1px 2px rgba(0,0,0,.5); --e2:0 1px 2px rgba(0,0,0,.5),0 8px 24px -12px rgba(0,0,0,.9); --e3:0 24px 64px -16px rgba(0,0,0,.9);
+  --shadow:var(--e2); color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#0f1117; --surface:#161922; --sunk:#1a1e2b; --raise:#252b3d; --line:#283041; --line-strong:#3a4458;
-  --ink:#E2E8F0; --ink-strong:#F8FAFC; --muted:#94A3B8; --faint:#64748B;
-  --honey:#FBBF24; --honey-strong:#FCD34D; --honey-soft:#3A2A0A; --on-honey:#1F1300;
+  --bg:#0A0A0A; --surface:#141414; --sunk:#1B1B1B; --raise:#232323; --line:#2A2A2A; --line-strong:#3D3D3D;
+  --ink:#F5F5F4; --ink-strong:#FFFFFF; --muted:#A8A29E; --faint:#8C8782;
+  --honey:#FACC15; --honey-strong:#FDE047; --honey-soft:#2A2306; --on-honey:#0A0A0A;
   --win:#34D399; --win-soft:#06281D; --loss:#FB7185; --loss-soft:#33101A; --tie:#A5B4FC; --tie-soft:#1E1B4B;
-  --admin:#047857; --on-admin:#ECFDF5; --overlay:rgba(0,0,0,.7);
-  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px -14px rgba(0,0,0,.8); color-scheme:dark}
+  --admin:#FACC15; --on-admin:#0A0A0A; --overlay:rgba(0,0,0,.72);
+  --e1:0 1px 2px rgba(0,0,0,.5); --e2:0 1px 2px rgba(0,0,0,.5),0 8px 24px -12px rgba(0,0,0,.9); --e3:0 24px 64px -16px rgba(0,0,0,.9);
+  --shadow:var(--e2); color-scheme:dark}
 
 *{box-sizing:border-box}
 html{font-size:14.5px;overflow-x:hidden}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:13.5px;line-height:1.5;-webkit-font-smoothing:antialiased}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:40;background:var(--surface)}
-::selection{background:#FED7D7;color:#9B2C2C}
+::selection{background:var(--honey);color:var(--on-honey)}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
 h1,h2,h3,h4{font-family:var(--f-display);font-weight:700;line-height:1.15;margin:0;color:var(--ink-strong);text-wrap:balance}
 p{margin:0}
 .mono,.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
-:focus-visible{outline:3px solid var(--honey);outline-offset:2px;border-radius:8px}
+:focus-visible{outline:3px solid var(--honey);outline-offset:2px;border-radius:8px;box-shadow:0 0 0 5px color-mix(in srgb,var(--ink-strong) 70%,transparent)}
 .i{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .i.sm{width:14px;height:14px}.i.lg{width:20px;height:20px}.i.xl{width:28px;height:28px}
 .wrap{max-width:1280px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
@@ -341,6 +348,58 @@ footer .wrap{display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap;
 footer button{border:0;background:none;color:inherit;padding:0;font-weight:700}
 footer button:hover{color:var(--honey-strong)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* ===== UI/UX Pro Max: interação, toque, movimento e acessibilidade ===== */
+button,a.btn,[role="button"],.chip,.res,.rtab,.arch,.reg{touch-action:manipulation;cursor:pointer}
+.btn,.res,.chip,.chip-btn,.rtab,.seg button,.pages button,.mobile-pages button,.x,.arch,.reg,.cell{transition:background-color var(--t-fast) var(--ease-out),border-color var(--t-fast) var(--ease-out),color var(--t-fast) var(--ease-out),transform var(--t-fast) var(--ease-out),box-shadow var(--t-fast) var(--ease-out)}
+.btn:active,.res:active,.chip:active,.rtab:active,.seg button:active,.x:active,.chip-btn:active{transform:scale(.97)}
+.btn{min-height:36px}.btn.sm{min-height:30px}
+.btn:disabled,.res:disabled{opacity:.45;cursor:not-allowed}
+.btn.honey{background:var(--honey);border-color:var(--honey);color:var(--on-honey)}
+.btn.honey:hover{filter:none;background:color-mix(in srgb,var(--honey) 86%,var(--ink-strong))}
+.card{box-shadow:var(--e1)}
+.card:where(.match,.pcard,.hcard):hover{box-shadow:var(--e2)}
+.modal{box-shadow:var(--e3)}
+.nav{z-index:var(--z-nav)}.overlay{z-index:var(--z-modal)}.toast{z-index:var(--z-toast)}
+.pages button[aria-current="page"],.mobile-pages button[aria-current="page"]{background:var(--honey);color:var(--on-honey)}
+.pages button[aria-current="page"] .pill{background:color-mix(in srgb,var(--on-honey) 12%,transparent);color:var(--on-honey)}
+.rtab[aria-pressed="true"]{background:var(--ink-strong);color:var(--bg);border-color:var(--ink-strong)}
+.eyebrow{color:var(--honey-strong)}
+.sec-title .ico,.empty .ring,.placeholder .ring{background:var(--honey);color:var(--on-honey)}
+.brand .pot{background:var(--honey);color:var(--on-honey)}
+.brand .pot svg{width:22px;height:22px}
+.adminbar button{color:inherit}
+.hero-l{background:linear-gradient(135deg,var(--honey-soft),var(--surface) 65%)}
+.skip{position:absolute;left:12px;top:-60px;z-index:100;background:var(--honey);color:var(--on-honey);padding:10px 14px;border-radius:10px;font-weight:800;text-decoration:none;transition:top var(--t-fast)}
+.skip:focus{top:calc(env(safe-area-inset-top,0px) + 10px)}
+main:focus{outline:none}
+.pw{position:relative}.pw input{padding-right:44px}
+.pw button{position:absolute;right:4px;top:50%;transform:translateY(-50%);border:0;background:none;width:36px;height:36px;border-radius:8px;display:grid;place-items:center;color:var(--muted)}
+.pw button:hover{background:var(--sunk);color:var(--ink)}
+@keyframes ov-in{from{opacity:0}to{opacity:1}}
+@keyframes md-in{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes toast-in{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
+.overlay{animation:ov-in var(--t) var(--ease-out)}
+.overlay:last-child .modal{animation:md-in var(--t) var(--ease-out)}
+.toast{animation:toast-in var(--t) var(--ease-out)}
+.hexb img{background:var(--surface)}
+/* alvos de toque de 44px em telas de toque */
+@media (pointer:coarse){
+  .btn,.btn.sm,.res,.chip,.chip-btn,.rtab,.seg button,.x,.mobile-pages button{min-height:44px}
+  .btn.icon,.btn.sm.icon,.x{min-width:44px}
+  .cell{min-height:44px}
+  .report{gap:8px}
+}
+/* texto mínimo de 16px no celular (evita zoom automático do iOS) */
+@media (max-width:768px){
+  html{font-size:16px}
+  body{font-size:15px}
+  input[type=text],input[type=number],input[type=search],input[type=url],input[type=password],input[type=datetime-local],select,textarea{font-size:16px}
+  .tiny{font-size:.75rem}
+}
+input[type=password]{width:100%;min-width:0;background:var(--bg);border:1.5px solid var(--line);border-radius:12px;padding:9px 12px;font-size:.88rem}
+input[type=password]:focus,input[type=datetime-local]:focus{outline:none;border-color:var(--honey)}
+@media (prefers-reduced-motion:reduce){.overlay,.overlay .modal,.toast{animation:none!important}.btn:active,.res:active{transform:none}}
 
 :root{--comb:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='97' viewBox='0 0 56 97'%3E%3Cpath d='M28 66L0 50V17L28 1l28 16v33L28 66zm0 32L0 82' fill='none' stroke='%23F59E0B' stroke-opacity='.14' stroke-width='1.5'/%3E%3C/svg%3E")}
 [hidden]{display:none!important} html{color-scheme:light} body{margin:0} img{max-width:100%}
@@ -1132,7 +1191,7 @@ function vNav() {
   var tools = '<button class="chip-btn" data-a="theme" title="Alternar tema: Auto, Claro ou Escuro" aria-label="Alternar tema">' + themeLbl + "</button>";
   if (isAdmin()) tools += '<button class="chip-btn" data-a="wa" data-mode="" title="Avisos para o grupo do WhatsApp">' + ic("msg") + '<span class="hide-sm">WhatsApp</span></button><button class="chip-btn" data-a="settings" title="Painel do Administrador">' + ic("gear") + "</button>";
   else { if (t.currentRound > 0) tools += '<span class="live hide-sm"><i></i>Torneio em curso</span>'; tools += '<button class="chip-btn" data-a="login-open" title="Entrar como organizador">' + ic("lock") + '<span class="hide-sm">Área do Admin</span></button>'; }
-  return '<header class="nav"><div class="wrap"><div class="nav-row"><button class="brand" data-a="page" data-p="tournament"><span class="pot" aria-hidden="true">🍯</span><b>HoneyLeague TCG</b></button>' +
+  return '<header class="nav"><div class="wrap"><div class="nav-row"><button class="brand" data-a="page" data-p="tournament"><span class="pot" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M12 2.8 19.8 7.3v9.4L12 21.2l-7.8-4.5V7.3z"/><path d="M8 10.5c1.3-1 2.6-1 4 0s2.7 1 4 0"/><path d="M12 11v4.2"/><circle cx="12" cy="16.6" r="1" fill="currentColor"/></svg></span><b>HoneyLeague TCG</b></button>' +
     '<nav class="pages" aria-label="Páginas">' + PAGES.map(function (p) { return '<button data-a="page" data-p="' + p[0] + '" title="' + p[1] + '"' + (S.page === p[0] ? ' aria-current="page"' : "") + ">" + ic(p[3]) + "<span>" + p[2] + "</span>" + (badge[p[0]] || "") + "</button>"; }).join("") + "</nav>" +
     '<div class="nav-tools">' + tools + "</div></div>" +
     '<nav class="mobile-pages" aria-label="Páginas">' + PAGES.map(function (p) { return '<button data-a="page" data-p="' + p[0] + '"' + (S.page === p[0] ? ' aria-current="page"' : "") + ">" + ic(p[3]) + "<span>" + p[2] + "</span></button>"; }).join("") + "</nav></div></header>" +
@@ -1185,7 +1244,7 @@ function vStandings() {
     '<button class="btn" data-a="page" data-p="matrix">' + ic("grid", "sm") + "Matriz de Confrontos</button>" +
     (admin && t.currentRound > 0 && t.currentRound >= t.totalRounds && t.status !== "finished" ? '<button class="btn win" data-a="archive">' + ic("trophy", "sm") + "Finalizar e Arquivar</button>" : "") +
     (admin ? '<button class="btn wa" data-a="wa" data-mode="' + (finished ? "finish" : "standings") + '">' + ic("msg", "sm") + "WhatsApp</button>" : "") + "</div></div></div>";
-  var champBox = finished && champ ? '<div class="champ"><div class="row" style="gap:14px">' + ic("crown", "xl") + '<div><div class="eyebrow" style="color:#5B3A00">👑 Torneio Concluído · Campeão Oficial</div><h4>' + esc(champ.player.name) + " venceu a edição com " + champ.points +
+  var champBox = finished && champ ? '<div class="champ"><div class="row" style="gap:14px">' + ic("crown", "xl") + '<div><div class="eyebrow" style="color:#5B3A00">Torneio Concluído · Campeão Oficial</div><h4>' + esc(champ.player.name) + " venceu a edição com " + champ.points +
     " pontos!</h4><p>Deck: <strong>" + esc(HL.archOf(champ.player)) + "</strong> · Campanha: " + champ.wins + "V - " + champ.draws + "E - " + champ.losses + 'D</p></div></div><div class="row"><button class="btn" data-a="deck" data-id="' + champ.player.id + '">' + ic("image", "sm") + "Decklist Campeã</button>" +
     (admin ? '<button class="btn" data-a="wa" data-mode="finish">' + ic("msg", "sm") + "Enviar no WhatsApp</button>" : "") + (admin && t.status !== "finished" ? '<button class="btn" data-a="archive">' + ic("trophy", "sm") + "Finalizar e Arquivar</button>" : "") +
     '<button class="btn" data-a="page" data-p="history">Ver Histórico</button></div></div>' : "";
@@ -1338,7 +1397,7 @@ function vMetaHistory(hist) {
   var picker = '<div class="card pad row"><span class="small" style="font-weight:800">Filtrar Torneio Histórico:</span><select id="histSel" data-sel="histSel" style="max-width:520px"><option value="all">Todos os Torneios Anteriores (' + hist.length + " eventos combinados)</option>" +
     hist.map(function (h) { return '<option value="' + esc(h.id) + '"' + (h.id === selId ? " selected" : "") + ">" + esc(h.title) + " (" + esc(h.date) + ") - " + h.totalPlayers + " Treinadores</option>"; }).join("") + "</select></div>";
   var lead = data.list[0];
-  var kpis = '<div class="kpis"><div class="card kpi"><small>Torneios Selecionados</small><strong>' + items.length + (items.length === 1 ? " Evento" : " Eventos") + '</strong></div><div class="card kpi"><small>Decks Analisados</small><strong>' + data.total + ' Baralhos</strong></div><div class="card kpi"><small>Maior Campeão</small><strong>' + (lead ? esc(lead.archetype) + " (" + lead.titles + "🏆)" : "Nenhum") + '</strong></div><div class="card kpi"><small>Arquétipos Distintos</small><strong>' + data.list.length + " Tipos</strong></div></div>";
+  var kpis = '<div class="kpis"><div class="card kpi"><small>Torneios Selecionados</small><strong>' + items.length + (items.length === 1 ? " Evento" : " Eventos") + '</strong></div><div class="card kpi"><small>Decks Analisados</small><strong>' + data.total + ' Baralhos</strong></div><div class="card kpi"><small>Maior Campeão</small><strong>' + (lead ? esc(lead.archetype) + " (" + lead.titles + " títulos)" : "Nenhum") + '</strong></div><div class="card kpi"><small>Arquétipos Distintos</small><strong>' + data.list.length + " Tipos</strong></div></div>";
   var gallery = items.filter(function (h) { return h.champion && h.champion.name; });
   var gal = gallery.length ? '<div class="card pad stack"><h3 style="font-size:1rem">' + ic("crown") + " Galeria de Campeões dos Torneios Anteriores</h3><div class=\"grid-cards\">" + gallery.map(function (h) {
     var c = h.champion;
@@ -1438,26 +1497,26 @@ function vHistory() {
 function vRules() {
   return '<div class="doc"><section class="card"><span class="eyebrow">' + ic("book", "sm") + 'Regulamento Oficial HoneyLeague</span><h2>Estrutura do Torneio & Regulamento</h2><p class="muted">Formato padrão, prazos de rodada, agendamento de partidas, penalidades, decklists e critérios de desempate.</p><div><button class="btn" data-a="page" data-p="tournament">' + ic("left", "sm") + "Voltar ao Torneio Ao Vivo</button></div></section>" +
     '<section class="card"><h3>' + ic("trophy") + 'Estrutura do Torneio — Formato Padrão</h3><div class="tbl2"><div><span class="small muted">6 a 16 jogadores</span><b>4 rodadas suíças — MD1</b></div><div><span class="small muted">17 a 32 jogadores</span><b>5 rodadas suíças — MD1</b></div></div>' +
-    '<div class="banner">⚠️ Todos os horários seguem o horário de Brasília (Fortaleza/CE), independentemente do estado ou cidade do jogador.</div><p>Cada rodada possui <strong>30 minutos ou 24 horas</strong> de duração, conforme o combinado. Nesse período, os jogadores devem entrar em contato, combinar um horário, realizar a partida e enviar o resultado.</p></section>' +
-    '<section class="card"><h3>🏆 Formatos de Torneios</h3><h5>🃏 Torneios de Código</h5><p>Os jogadores do <strong>Top 3</strong> recebem códigos digitais de acordo com a colocação oficial no torneio.</p><h5>💵 Torneios pagos de booster</h5><p>É cobrado um valor de <strong>4 ou 5 reais</strong> para a compra de triple packs e boosters para premiação do <strong>Top 1 e Top 2</strong>.</p></section>' +
-    '<section class="card"><h3>⏰ Regras de Marcação das Batalhas</h3>' +
-    "<h5>📌 1. Prazo da rodada</h5><p>Cada rodada terá <strong>30 minutos ou 24 horas</strong> para ser realizada, a depender do combinado entre a organização e os jogadores. A partida deve acontecer dentro do período da rodada, respeitando o horário oficial informado. Exceções fora do período só valem quando os dois jogadores concordarem previamente.</p>" +
-    "<h5>📌 2. Marcação de horário (formato 24h)</h5><p>Para que uma partida seja considerada marcada, os jogadores devem informar horários objetivos e definidos. Não valem expressões como “daqui a pouco”, “mais tarde”, “umas 3 horas”, “3 e pouco” ou “quando eu puder”. Um horário aproximado como “umas 15h” é considerado marcado a partir das <strong>15h01</strong>.</p>" +
-    "<h5>📌 3. Regra dos 3 horários</h5><p>Se o jogador não conseguir definir um único horário, deve apresentar <strong>3 opções diferentes</strong>, com pelo menos <strong>1 hora de intervalo</strong> entre elas (ex.: 14h, 15h e 17h), dentro do período da rodada. Se um jogador apresentar três opções válidas e o adversário não oferecer alternativas suficientes, a organização pode considerar isso na análise.</p>" +
-    "<h5>📲 4. Comunicação entre os jogadores</h5><p>O jogador deve marcar o adversário no <strong>grupo oficial do WhatsApp</strong> ao tentar combinar a partida. A conversa pode continuar no privado, desde que existam registros quando a organização precisar analisar.</p>" +
-    "<h5>⏰ 5. Horário combinado & tolerância</h5><p>Depois que os dois concordam com um horário, ele passa a ser o horário oficial da partida e só muda com o acordo de ambos. Se um jogador não comparecer, há tolerância de <strong>5 minutos</strong> no formato 30 minutos e <strong>30 minutos</strong> no formato 24 horas.</p>" +
-    "<h5>⚠️ 6. Final do prazo da rodada</h5><p>As partidas devem ser concluídas e os resultados enviados dentro do prazo. Se a partida não acontecer por responsabilidade comprovada de apenas um jogador, a organização pode atribuir <strong>WO</strong> a ele. Se a responsabilidade for dos dois, pode aplicar <strong>Double Loss</strong>.</p>" +
-    "<h5>🚫 7. Inatividade e drop</h5><p>O jogador que ficar duas rodadas sem jogar e sem qualquer comunicação com o adversário ou com a organização pode ser <strong>automaticamente dropado</strong>. A organização pode analisar situações excepcionais antes do drop.</p>" +
-    "<h5>⚔️ 8. Ausências recorrentes</h5><p>Se os dois jogadores forem penalizados por ausência ou falta de comunicação em uma rodada e isso se repetir na rodada seguinte, ambos podem ser dropados.</p></section>" +
-    '<section class="card"><h3>🎮 Bugs e desconexões</h3><p>Problemas de conexão, queda de internet ou travamentos são, em regra, responsabilidade do jogador afetado.</p><ul><li><strong>Bug no início da partida:</strong> se um bug impedir o início ou o andamento normal, o adversário pode aceitar ou não uma nova partida.</li><li><strong>Bug em momento decisivo:</strong> o jogador pode apresentar print ou vídeo para análise; a vitória só é reconhecida com evidência suficiente.</li></ul></section>' +
-    '<section class="card"><h3>⏱️ Temporizador obrigatório</h3><p>Todos os jogadores devem usar o temporizador durante toda a partida. Se um jogador jogar sem o temporizador ativado, o adversário pode apresentar print ou vídeo à organização, que pode encerrar a partida e aplicar a decisão cabível.</p></section>' +
-    '<section class="card"><h3>🃏 Deck incorreto e desistência</h3><p>Se o jogador selecionar o deck incorreto, pode <strong>desistir e voltar à partida</strong> para escolher o deck correto no início, sem penalidade.</p></section>' +
-    '<section class="card"><h3>🧾 Decklist & penalidades</h3><p>Os jogadores devem usar durante todo o torneio exatamente a mesma decklist informada na inscrição. Se for comprovado o uso de carta fora da lista:</p><ul><li><strong>Formato MD1:</strong> derrota automática na partida.</li><li><strong>Formato MD3:</strong> derrota automática na partida; se houver outra partida na MD3, o adversário escolhe quem começa.</li><li><strong>Reincidência:</strong> se a irregularidade se repetir no mesmo torneio, o jogador é automaticamente dropado.</li></ul></section>' +
+    '<div class="banner">' + ic("clock") + ' Todos os horários seguem o horário de Brasília (Fortaleza/CE), independentemente do estado ou cidade do jogador.</div><p>Cada rodada possui <strong>30 minutos ou 24 horas</strong> de duração, conforme o combinado. Nesse período, os jogadores devem entrar em contato, combinar um horário, realizar a partida e enviar o resultado.</p></section>' +
+    '<section class="card"><h3>' + ic("trophy") + 'Formatos de Torneios</h3><h5>Torneios de Código</h5><p>Os jogadores do <strong>Top 3</strong> recebem códigos digitais de acordo com a colocação oficial no torneio.</p><h5>Torneios pagos de booster</h5><p>É cobrado um valor de <strong>4 ou 5 reais</strong> para a compra de triple packs e boosters para premiação do <strong>Top 1 e Top 2</strong>.</p></section>' +
+    '<section class="card"><h3>' + ic("clock") + 'Regras de Marcação das Batalhas</h3>' +
+    "<h5>1. Prazo da rodada</h5><p>Cada rodada terá <strong>30 minutos ou 24 horas</strong> para ser realizada, a depender do combinado entre a organização e os jogadores. A partida deve acontecer dentro do período da rodada, respeitando o horário oficial informado. Exceções fora do período só valem quando os dois jogadores concordarem previamente.</p>" +
+    "<h5>2. Marcação de horário (formato 24h)</h5><p>Para que uma partida seja considerada marcada, os jogadores devem informar horários objetivos e definidos. Não valem expressões como “daqui a pouco”, “mais tarde”, “umas 3 horas”, “3 e pouco” ou “quando eu puder”. Um horário aproximado como “umas 15h” é considerado marcado a partir das <strong>15h01</strong>.</p>" +
+    "<h5>3. Regra dos 3 horários</h5><p>Se o jogador não conseguir definir um único horário, deve apresentar <strong>3 opções diferentes</strong>, com pelo menos <strong>1 hora de intervalo</strong> entre elas (ex.: 14h, 15h e 17h), dentro do período da rodada. Se um jogador apresentar três opções válidas e o adversário não oferecer alternativas suficientes, a organização pode considerar isso na análise.</p>" +
+    "<h5>4. Comunicação entre os jogadores</h5><p>O jogador deve marcar o adversário no <strong>grupo oficial do WhatsApp</strong> ao tentar combinar a partida. A conversa pode continuar no privado, desde que existam registros quando a organização precisar analisar.</p>" +
+    "<h5>5. Horário combinado & tolerância</h5><p>Depois que os dois concordam com um horário, ele passa a ser o horário oficial da partida e só muda com o acordo de ambos. Se um jogador não comparecer, há tolerância de <strong>5 minutos</strong> no formato 30 minutos e <strong>30 minutos</strong> no formato 24 horas.</p>" +
+    "<h5>6. Final do prazo da rodada</h5><p>As partidas devem ser concluídas e os resultados enviados dentro do prazo. Se a partida não acontecer por responsabilidade comprovada de apenas um jogador, a organização pode atribuir <strong>WO</strong> a ele. Se a responsabilidade for dos dois, pode aplicar <strong>Double Loss</strong>.</p>" +
+    "<h5>7. Inatividade e drop</h5><p>O jogador que ficar duas rodadas sem jogar e sem qualquer comunicação com o adversário ou com a organização pode ser <strong>automaticamente dropado</strong>. A organização pode analisar situações excepcionais antes do drop.</p>" +
+    "<h5>8. Ausências recorrentes</h5><p>Se os dois jogadores forem penalizados por ausência ou falta de comunicação em uma rodada e isso se repetir na rodada seguinte, ambos podem ser dropados.</p></section>" +
+    '<section class="card"><h3>' + ic("info") + 'Bugs e desconexões</h3><p>Problemas de conexão, queda de internet ou travamentos são, em regra, responsabilidade do jogador afetado.</p><ul><li><strong>Bug no início da partida:</strong> se um bug impedir o início ou o andamento normal, o adversário pode aceitar ou não uma nova partida.</li><li><strong>Bug em momento decisivo:</strong> o jogador pode apresentar print ou vídeo para análise; a vitória só é reconhecida com evidência suficiente.</li></ul></section>' +
+    '<section class="card"><h3>' + ic("clock") + 'Temporizador obrigatório</h3><p>Todos os jogadores devem usar o temporizador durante toda a partida. Se um jogador jogar sem o temporizador ativado, o adversário pode apresentar print ou vídeo à organização, que pode encerrar a partida e aplicar a decisão cabível.</p></section>' +
+    '<section class="card"><h3>' + ic("layers") + 'Deck incorreto e desistência</h3><p>Se o jogador selecionar o deck incorreto, pode <strong>desistir e voltar à partida</strong> para escolher o deck correto no início, sem penalidade.</p></section>' +
+    '<section class="card"><h3>' + ic("file") + 'Decklist & penalidades</h3><p>Os jogadores devem usar durante todo o torneio exatamente a mesma decklist informada na inscrição. Se for comprovado o uso de carta fora da lista:</p><ul><li><strong>Formato MD1:</strong> derrota automática na partida.</li><li><strong>Formato MD3:</strong> derrota automática na partida; se houver outra partida na MD3, o adversário escolhe quem começa.</li><li><strong>Reincidência:</strong> se a irregularidade se repetir no mesmo torneio, o jogador é automaticamente dropado.</li></ul></section>' +
     '<section class="card"><h3>1. Sistema Suíço</h3><p>No Sistema Suíço <strong>ninguém é eliminado</strong> ao perder uma partida: todos jogam todas as rodadas programadas.</p><ul><li><strong>Emparceiramento por pontos:</strong> a cada rodada, jogadores com pontuações parecidas se enfrentam. Dentro de cada faixa de pontos, as mesas são sorteadas.</li><li><strong>Sem reencontros:</strong> dois jogadores não se enfrentam duas vezes na fase suíça (só se for matematicamente impossível evitar).</li><li><strong>BYE automático:</strong> com número ímpar de participantes, o jogador de pior colocação que ainda não recebeu BYE ganha uma vitória livre de 3 pontos.</li></ul></section>' +
     '<section class="card"><h3>2. Pontuação das partidas</h3><div class="tbl2"><div><b>3 pontos</b><span class="small muted">Vitória ou BYE</span></div><div><b>1 ponto</b><span class="small muted">Empate (para cada jogador)</span></div><div><b>0 pontos</b><span class="small muted">Derrota</span></div></div></section>' +
     '<section class="card"><h3>3. Critérios de desempate</h3><p>Jogadores com os mesmos pontos são separados, nesta ordem, por:</p><h5>1º · OMW% (Opponent Match Win %)</h5><p>Mede a força dos oponentes que você enfrentou: é a média do aproveitamento de cada oponente (pontos ÷ pontos possíveis). O aproveitamento de cada oponente tem <strong>piso de 33,33%</strong>.</p><h5>2º · OOW% (Opponents’ Opponent Match Win %)</h5><p>Usado se o empate continuar: é a média do OMW% dos seus oponentes.</p><h5>Depois</h5><p>Número de vitórias e, por último, ordem alfabética.</p></section>' +
     '<section class="card"><h3>4. Rodadas recomendadas</h3><div class="tbl2"><div><span class="small muted">até 4 jogadores</span><b>2 rodadas</b></div><div><span class="small muted">5 a 8 jogadores</span><b>3 rodadas</b></div><div><span class="small muted">9 a 16 jogadores</span><b>4 rodadas</b></div><div><span class="small muted">17 a 32 jogadores</span><b>5 rodadas</b></div><div><span class="small muted">33+ jogadores</span><b>6+ rodadas</b></div></div></section>' +
-    '<section class="card"><h3>💛 Considerações finais</h3><p>A Liga Honey busca manter os torneios organizados, acessíveis e justos para todos. Ao participar, o jogador declara estar ciente e de acordo com estas regras.</p></section></div>';
+    '<section class="card"><h3>' + ic("shield") + 'Considerações finais</h3><p>A Liga Honey busca manter os torneios organizados, acessíveis e justos para todos. Ao participar, o jogador declara estar ciente e de acordo com estas regras.</p></section></div>';
 }
 
 /* ===== Marcação de horário (regras 2 a 5 do regulamento) ===== */
@@ -1923,8 +1982,8 @@ var PRIZE_PRESETS = { code: ["Código digital", "Código digital", "Código digi
 MODALS.login = function (m) {
   var f = m.f, locked = S.lockUntil > Date.now();
   var body = (f.err ? '<div class="banner warn">' + esc(f.err) + "</div>" : "") +
-    '<label class="field"><span>Usuário</span><input type="text" id="m-luser" data-m="user" autocomplete="username" maxlength="40" value="' + esc(f.user || "") + '"></label>' +
-    '<label class="field"><span>Senha</span><input type="password" id="m-lpass" data-m="pass" autocomplete="current-password" maxlength="80" value="' + esc(f.pass || "") + '"></label>' +
+    '<label class="field"><span>Usuário *</span><input type="text" id="m-luser" data-m="user" autocomplete="username" maxlength="40" value="' + esc(f.user || "") + '"></label>' +
+    '<div class="field"><label for="m-lpass" style="font-size:.72rem;font-weight:800;letter-spacing:.03em;color:var(--muted);text-transform:uppercase">Senha</label><div class="pw"><input type="password" id="m-lpass" data-m="pass" autocomplete="current-password" maxlength="80" value="' + esc(f.pass || "") + '"><button type="button" data-a="pw-toggle" data-for="m-lpass" aria-label="Mostrar senha" aria-pressed="false">' + ic("eye", "sm") + "</button></div></div>" +
     '<p class="tiny muted">O acesso fica salvo neste aparelho por 12 horas. Use "Sair" na faixa verde para encerrar antes.</p>' +
     (S.owner || S.mode === "local" ? '<button class="btn sm ghost" data-a="setpass-open" data-reset="1" style="justify-self:start">Esqueci a senha (sou o dono do link)</button>' : "");
   return shell("narrow", "Área do Admin", "Entre como organizador para controlar o torneio", body,
@@ -1933,10 +1992,10 @@ MODALS.login = function (m) {
 MODALS.setpass = function (m) {
   var f = m.f;
   var body = (f.err ? '<div class="banner warn">' + esc(f.err) + "</div>" : "") +
-    (m.reset ? '<div class="banner info">' + ic("info") + "<span>Como dono do link, você pode definir um novo login sem a senha antiga.</span></div>" : '<label class="field"><span>Senha atual</span><input type="password" id="m-cur" data-m="cur" autocomplete="current-password" maxlength="80" value="' + esc(f.cur || "") + '"></label>') +
+    (m.reset ? '<div class="banner info">' + ic("info") + "<span>Como dono do link, você pode definir um novo login sem a senha antiga.</span></div>" : '<div class="field"><label for="m-cur" style="font-size:.72rem;font-weight:800;letter-spacing:.03em;color:var(--muted);text-transform:uppercase">Senha atual</label><div class="pw"><input type="password" id="m-cur" data-m="cur" autocomplete="current-password" maxlength="80" value="' + esc(f.cur || "") + '"><button type="button" data-a="pw-toggle" data-for="m-cur" aria-label="Mostrar senha" aria-pressed="false">' + ic("eye", "sm") + "</button></div></div>") +
     '<label class="field"><span>Novo usuário</span><input type="text" id="m-nuser" data-m="user" autocomplete="username" maxlength="40" value="' + esc(f.user || "") + '"></label>' +
-    '<label class="field"><span>Nova senha (mínimo 8 caracteres)</span><input type="password" id="m-npass" data-m="pass" autocomplete="new-password" maxlength="80" value="' + esc(f.pass || "") + '"></label>' +
-    '<label class="field"><span>Repita a nova senha</span><input type="password" id="m-npass2" data-m="pass2" autocomplete="new-password" maxlength="80" value="' + esc(f.pass2 || "") + '"></label>';
+    '<div class="field"><label for="m-npass" style="font-size:.72rem;font-weight:800;letter-spacing:.03em;color:var(--muted);text-transform:uppercase">Nova senha (mínimo 8 caracteres)</label><div class="pw"><input type="password" id="m-npass" data-m="pass" autocomplete="new-password" maxlength="80" value="' + esc(f.pass || "") + '"><button type="button" data-a="pw-toggle" data-for="m-npass" aria-label="Mostrar senha" aria-pressed="false">' + ic("eye", "sm") + "</button></div></div>" +
+    '<div class="field"><label for="m-npass2" style="font-size:.72rem;font-weight:800;letter-spacing:.03em;color:var(--muted);text-transform:uppercase">Repita a nova senha</label><div class="pw"><input type="password" id="m-npass2" data-m="pass2" autocomplete="new-password" maxlength="80" value="' + esc(f.pass2 || "") + '"><button type="button" data-a="pw-toggle" data-for="m-npass2" aria-label="Mostrar senha" aria-pressed="false">' + ic("eye", "sm") + "</button></div></div>";
   return shell("narrow", m.reset ? "Redefinir acesso do organizador" : "Trocar usuário e senha", "Vale para todos os organizadores deste link", body,
     '<button class="btn" data-a="close">Cancelar</button><button class="btn honey" data-a="setpass-save"' + (m.busy ? " disabled" : "") + ">" + ic("check", "sm") + (m.busy ? "Salvando..." : "Salvar") + "</button>", ic("lock"));
 };
@@ -1970,9 +2029,9 @@ function restoreFocus(k) {
 function render() {
   var keep = captureFocus(), page = { tournament: vTournament, metagame: vMetagame, matrix: vMatrix, history: vHistory, ranking: vRanking, rules: vRules }[S.page] || vTournament;
   var html;
-  try { html = vNav() + '<main class="wrap">' + page() + "</main>" + vFooter(); }
+  try { html = '<a class="skip" href="#main" data-a="skip">Pular para o conteúdo</a>' + vNav() + '<main class="wrap" id="main" tabindex="-1">' + page() + "</main>" + vFooter(); }
   catch (e) { console.error(e); html = vNav() + '<main class="wrap"><div class="card empty"><h3>Algo deu errado ao montar esta página</h3><p>' + esc(e.message) + '</p><button class="btn" data-a="page" data-p="tournament">Voltar ao torneio</button></div></main>'; }
-  $("#app").innerHTML = html;
+  $("#app").innerHTML = a11y(html);
   restoreFocus(keep);
   renderModals();
   tickClock();
@@ -2164,7 +2223,8 @@ async function restoreTournament(file) {
 
 /* ===== ações ===== */
 var A = {
-  page: function (d) { S.page = d.p; window.scrollTo(0, 0); render(); },
+  page: function (d) { goPage(d.p, true); },
+  skip: function () { var m = $("#main"); if (m) m.focus(); },
   tab: function (d) { S.tab = d.t; render(); },
   theme: function () {
     var dark = sysDark(), m = S.themeMode;
@@ -2607,6 +2667,28 @@ A["p-detect"] = function () {
 };
 
 A["p-type"] = function (d) { var m = topModal(); m.f.deckType = d.v || ""; renderModals(); };
+
+/* ===== acessibilidade e navegação (UI/UX Pro Max) ===== */
+/* botões só com ícone ganham nome acessível a partir do título */
+function a11y(html) {
+  return html.replace(/<button((?:(?!aria-label)[^>])*?)\stitle="([^"]*)"((?:(?!aria-label)[^>])*)>/g, function (all, a, t, b) {
+    return /aria-label=/.test(all) ? all : "<button" + a + ' title="' + t + '" aria-label="' + t + '"' + b + ">";
+  });
+}
+var PAGE_IDS = ["tournament", "metagame", "matrix", "history", "ranking", "rules"];
+/* cada página tem endereço próprio (#ranking, #history...): voltar do navegador e links compartilhados funcionam */
+function goPage(p, push) {
+  if (PAGE_IDS.indexOf(p) < 0) p = "tournament";
+  var changed = S.page !== p;
+  S.page = p;
+  if (push) { try { if (location.hash.slice(1) !== p) history.pushState(null, "", "#" + p); } catch (e) { } }
+  render();
+  if (changed) { window.scrollTo(0, 0); var m = $("#main"); if (m) m.focus({ preventScroll: true }); }
+}
+(function () { var h = (location.hash || "").slice(1); if (PAGE_IDS.indexOf(h) >= 0) S.page = h; })();
+window.addEventListener("popstate", function () { var h = (location.hash || "").slice(1); goPage(PAGE_IDS.indexOf(h) >= 0 ? h : "tournament", false); });
+window.addEventListener("hashchange", function () { var h = (location.hash || "").slice(1); if (PAGE_IDS.indexOf(h) >= 0 && h !== S.page) goPage(h, false); });
+A["pw-toggle"] = function (d) { var el = document.getElementById(d.for); if (!el) return; var show = el.type === "password"; el.type = show ? "text" : "password"; var b = document.querySelector('[data-for="' + d.for + '"]'); if (b) { b.setAttribute("aria-label", show ? "Ocultar senha" : "Mostrar senha"); b.setAttribute("aria-pressed", String(show)); } };
 
 /* ===== modo GitHub Pages: dados no Firebase (Firestore + Authentication) ===== */
 var FB = { app: null, fs: null, auth: null, imgs: {}, loading: {} };
