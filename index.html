@@ -773,6 +773,9 @@ footer button:hover{color:var(--honey-strong)}
 <script>
 (function(){
 "use strict";
+/* nomes dos Pokémon (só texto), para autocompletar e detectar pelo nome do deck */
+var DEX_NAMES = "Bulbasaur|Ivysaur|Venusaur|Charmander|Charmeleon|Charizard|Squirtle|Wartortle|Blastoise|Caterpie|Metapod|Butterfree|Weedle|Kakuna|Beedrill|Pidgey|Pidgeotto|Pidgeot|Rattata|Raticate|Spearow|Fearow|Ekans|Arbok|Pikachu|Raichu|Sandshrew|Sandslash|Nidoran ♀|Nidorina|Nidoqueen|Nidoran ♂|Nidorino|Nidoking|Clefairy|Clefable|Vulpix|Ninetales|Jigglypuff|Wigglytuff|Zubat|Golbat|Oddish|Gloom|Vileplume|Paras|Parasect|Venonat|Venomoth|Diglett|Dugtrio|Meowth|Persian|Psyduck|Golduck|Mankey|Primeape|Growlithe|Arcanine|Poliwag|Poliwhirl|Poliwrath|Abra|Kadabra|Alakazam|Machop|Machoke|Machamp|Bellsprout|Weepinbell|Victreebel|Tentacool|Tentacruel|Geodude|Graveler|Golem|Ponyta|Rapidash|Slowpoke|Slowbro|Magnemite|Magneton|Farfetchd|Doduo|Dodrio|Seel|Dewgong|Grimer|Muk|Shellder|Cloyster|Gastly|Haunter|Gengar|Onix|Drowzee|Hypno|Krabby|Kingler|Voltorb|Electrode|Exeggcute|Exeggutor|Cubone|Marowak|Hitmonlee|Hitmonchan|Lickitung|Koffing|Weezing|Rhyhorn|Rhydon|Chansey|Tangela|Kangaskhan|Horsea|Seadra|Goldeen|Seaking|Staryu|Starmie|Mr. Mime|Scyther|Jynx|Electabuzz|Magmar|Pinsir|Tauros|Magikarp|Gyarados|Lapras|Ditto|Eevee|Vaporeon|Jolteon|Flareon|Porygon|Omanyte|Omastar|Kabuto|Kabutops|Aerodactyl|Snorlax|Articuno|Zapdos|Moltres|Dratini|Dragonair|Dragonite|Mewtwo|Mew|Chikorita|Bayleef|Meganium|Cyndaquil|Quilava|Typhlosion|Totodile|Croconaw|Feraligatr|Sentret|Furret|Hoothoot|Noctowl|Ledyba|Ledian|Spinarak|Ariados|Crobat|Chinchou|Lanturn|Pichu|Cleffa|Igglybuff|Togepi|Togetic|Natu|Xatu|Mareep|Flaaffy|Ampharos|Bellossom|Marill|Azumarill|Sudowoodo|Politoed|Hoppip|Skiploom|Jumpluff|Aipom|Sunkern|Sunflora|Yanma|Wooper|Quagsire|Espeon|Umbreon|Murkrow|Slowking|Misdreavus|Unown|Wobbuffet|Girafarig|Pineco|Forretress|Dunsparce|Gligar|Steelix|Snubbull|Granbull|Qwilfish|Scizor|Shuckle|Heracross|Sneasel|Teddiursa|Ursaring|Slugma|Magcargo|Swinub|Piloswine|Corsola|Remoraid|Octillery|Delibird|Mantine|Skarmory|Houndour|Houndoom|Kingdra|Phanpy|Donphan|Porygon2|Stantler|Smeargle|Tyrogue|Hitmontop|Smoochum|Elekid|Magby|Miltank|Blissey|Raikou|Entei|Suicune|Larvitar|Pupitar|Tyranitar|Lugia|Ho-Oh|Celebi|Treecko|Grovyle|Sceptile|Torchic|Combusken|Blaziken|Mudkip|Marshtomp|Swampert|Poochyena|Mightyena|Zigzagoon|Linoone|Wurmple|Silcoon|Beautifly|Cascoon|Dustox|Lotad|Lombre|Ludicolo|Seedot|Nuzleaf|Shiftry|Taillow|Swellow|Wingull|Pelipper|Ralts|Kirlia|Gardevoir|Surskit|Masquerain|Shroomish|Breloom|Slakoth|Vigoroth|Slaking|Nincada|Ninjask|Shedinja|Whismur|Loudred|Exploud|Makuhita|Hariyama|Azurill|Nosepass|Skitty|Delcatty|Sableye|Mawile|Aron|Lairon|Aggron|Meditite|Medicham|Electrike|Manectric|Plusle|Minun|Volbeat|Illumise|Roselia|Gulpin|Swalot|Carvanha|Sharpedo|Wailmer|Wailord|Numel|Camerupt|Torkoal|Spoink|Grumpig|Spinda|Trapinch|Vibrava|Flygon|Cacnea|Cacturne|Swablu|Altaria|Zangoose|Seviper|Lunatone|Solrock|Barboach|Whiscash|Corphish|Crawdaunt|Baltoy|Claydol|Lileep|Cradily|Anorith|Armaldo|Feebas|Milotic|Castform|Kecleon|Shuppet|Banette|Duskull|Dusclops|Tropius|Chimecho|Absol|Wynaut|Snorunt|Glalie|Spheal|Sealeo|Walrein|Clamperl|Huntail|Gorebyss|Relicanth|Luvdisc|Bagon|Shelgon|Salamence|Beldum|Metang|Metagross|Regirock|Regice|Registeel|Latias|Latios|Kyogre|Groudon|Rayquaza|Jirachi|Deoxys|Turtwig|Grotle|Torterra|Chimchar|Monferno|Infernape|Piplup|Prinplup|Empoleon|Starly|Staravia|Staraptor|Bidoof|Bibarel|Kricketot|Kricketune|Shinx|Luxio|Luxray|Budew|Roserade|Cranidos|Rampardos|Shieldon|Bastiodon|Burmy|Wormadam Plant|Mothim|Combee|Vespiquen|Pachirisu|Buizel|Floatzel|Cherubi|Cherrim|Shellos|Gastrodon|Ambipom|Drifloon|Drifblim|Buneary|Lopunny|Mismagius|Honchkrow|Glameow|Purugly|Chingling|Stunky|Skuntank|Bronzor|Bronzong|Bonsly|Mime Jr.|Happiny|Chatot|Spiritomb|Gible|Gabite|Garchomp|Munchlax|Riolu|Lucario|Hippopotas|Hippowdon|Skorupi|Drapion|Croagunk|Toxicroak|Carnivine|Finneon|Lumineon|Mantyke|Snover|Abomasnow|Weavile|Magnezone|Lickilicky|Rhyperior|Tangrowth|Electivire|Magmortar|Togekiss|Yanmega|Leafeon|Glaceon|Gliscor|Mamoswine|Porygon-Z|Gallade|Probopass|Dusknoir|Froslass|Rotom|Uxie|Mesprit|Azelf|Dialga|Palkia|Heatran|Regigigas|Giratina|Cresselia|Phione|Manaphy|Darkrai|Shaymin|Arceus|Victini|Snivy|Servine|Serperior|Tepig|Pignite|Emboar|Oshawott|Dewott|Samurott|Patrat|Watchog|Lillipup|Herdier|Stoutland|Purrloin|Liepard|Pansage|Simisage|Pansear|Simisear|Panpour|Simipour|Munna|Musharna|Pidove|Tranquill|Unfezant|Blitzle|Zebstrika|Roggenrola|Boldore|Gigalith|Woobat|Swoobat|Drilbur|Excadrill|Audino|Timburr|Gurdurr|Conkeldurr|Tympole|Palpitoad|Seismitoad|Throh|Sawk|Sewaddle|Swadloon|Leavanny|Venipede|Whirlipede|Scolipede|Cottonee|Whimsicott|Petilil|Lilligant|Basculin|Sandile|Krokorok|Krookodile|Darumaka|Darmanitan|Maractus|Dwebble|Crustle|Scraggy|Scrafty|Sigilyph|Yamask|Cofagrigus|Tirtouga|Carracosta|Archen|Archeops|Trubbish|Garbodor|Zorua|Zoroark|Minccino|Cinccino|Gothita|Gothorita|Gothitelle|Solosis|Duosion|Reuniclus|Ducklett|Swanna|Vanillite|Vanillish|Vanilluxe|Deerling|Sawsbuck|Emolga|Karrablast|Escavalier|Foongus|Amoonguss|Frillish|Jellicent|Alomomola|Joltik|Galvantula|Ferroseed|Ferrothorn|Klink|Klang|Klinklang|Tynamo|Eelektrik|Eelektross|Elgyem|Beheeyem|Litwick|Lampent|Chandelure|Axew|Fraxure|Haxorus|Cubchoo|Beartic|Cryogonal|Shelmet|Accelgor|Stunfisk|Mienfoo|Mienshao|Druddigon|Golett|Golurk|Pawniard|Bisharp|Bouffalant|Rufflet|Braviary|Vullaby|Mandibuzz|Heatmor|Durant|Deino|Zweilous|Hydreigon|Larvesta|Volcarona|Cobalion|Terrakion|Virizion|Tornadus|Thundurus|Reshiram|Zekrom|Landorus|Kyurem|Keldeo|Meloetta|Genesect|Chespin|Quilladin|Chesnaught|Fennekin|Braixen|Delphox|Froakie|Frogadier|Greninja|Bunnelby|Diggersby|Fletchling|Fletchinder|Talonflame|Scatterbug|Spewpa|Vivillon|Litleo|Pyroar|Flabebe|Floette|Florges|Skiddo|Gogoat|Pancham|Pangoro|Furfrou|Espurr|Meowstic|Honedge|Doublade|Aegislash|Spritzee|Aromatisse|Swirlix|Slurpuff|Inkay|Malamar|Binacle|Barbaracle|Skrelp|Dragalge|Clauncher|Clawitzer|Helioptile|Heliolisk|Tyrunt|Tyrantrum|Amaura|Aurorus|Sylveon|Hawlucha|Dedenne|Carbink|Goomy|Sliggoo|Goodra|Klefki|Phantump|Trevenant|Pumpkaboo|Gourgeist|Bergmite|Avalugg|Noibat|Noivern|Xerneas|Yveltal|Zygarde|Diancie|Hoopa|Volcanion|Rowlet|Dartrix|Decidueye|Litten|Torracat|Incineroar|Popplio|Brionne|Primarina|Pikipek|Trumbeak|Toucannon|Yungoos|Gumshoos|Grubbin|Charjabug|Vikavolt|Crabrawler|Crabominable|Oricorio|Cutiefly|Ribombee|Rockruff|Lycanroc|Wishiwashi|Mareanie|Toxapex|Mudbray|Mudsdale|Dewpider|Araquanid|Fomantis|Lurantis|Morelull|Shiinotic|Salandit|Salazzle|Stufful|Bewear|Bounsweet|Steenee|Tsareena|Comfey|Oranguru|Passimian|Wimpod|Golisopod|Sandygast|Palossand|Pyukumuku|Type: Null|Silvally|Minior|Komala|Turtonator|Togedemaru|Mimikyu|Bruxish|Drampa|Dhelmise|Jangmo-o|Hakamo-o|Kommo-o|Tapu Koko|Tapu Lele|Tapu Bulu|Tapu Fini|Cosmog|Cosmoem|Solgaleo|Lunala|Nihilego|Buzzwole|Pheromosa|Xurkitree|Celesteela|Kartana|Guzzlord|Necrozma|Magearna|Marshadow|Poipole|Naganadel|Stakataka|Blacephalon|Zeraora|Meltan|Melmetal|Grookey|Thwackey|Rillaboom|Scorbunny|Raboot|Cinderace|Sobble|Drizzile|Inteleon|Skwovet|Greedent|Rookidee|Corvisquire|Corviknight|Blipbug|Dottler|Orbeetle|Nickit|Thievul|Gossifleur|Eldegoss|Wooloo|Dubwool|Chewtle|Drednaw|Yamper|Boltund|Rolycoly|Carkol|Coalossal|Applin|Flapple|Appletun|Silicobra|Sandaconda|Cramorant|Arrokuda|Barraskewda|Toxel|Toxtricity|Sizzlipede|Centiskorch|Clobbopus|Grapploct|Sinistea|Polteageist|Hatenna|Hattrem|Hatterene|Impidimp|Morgrem|Grimmsnarl|Obstagoon|Perrserker|Cursola|Sirfetchd|Mr. Rime|Runerigus|Milcery|Alcremie|Falinks|Pincurchin|Snom|Frosmoth|Stonjourner|Eiscue|Indeedee|Morpeko|Cufant|Copperajah|Dracozolt|Arctozolt|Dracovish|Arctovish|Duraludon|Dreepy|Drakloak|Dragapult|Zacian|Zamazenta|Eternatus|Kubfu|Urshifu|Zarude|Regieleki|Regidrago|Glastrier|Spectrier|Calyrex|Wyrdeer|Kleavor|Ursaluna|Basculegion|Sneasler|Overqwil|Enamorus|Sprigatito|Floragato|Meowscarada|Fuecoco|Crocalor|Skeledirge|Quaxly|Quaxwell|Quaquaval|Lechonk|Oinkologne|Tarountula|Spidops|Nymble|Lokix|Pawmi|Pawmo|Pawmot|Tandemaus|Maushold Family Of Four|Fidough|Dachsbun|Smoliv|Dolliv|Arboliva|Squawkabilly Green Plumage|Nacli|Naclstack|Garganacl|Charcadet|Armarouge|Ceruledge|Tadbulb|Bellibolt|Wattrel|Kilowattrel|Maschiff|Mabosstiff|Shroodle|Grafaiai|Bramblin|Brambleghast|Toedscool|Toedscruel|Klawf|Capsakid|Scovillain|Rellor|Rabsca|Flittle|Espathra|Tinkatink|Tinkatuff|Tinkaton|Wiglett|Wugtrio|Bombirdier|Finizen|Palafin Zero|Varoom|Revavroom|Cyclizar|Orthworm|Glimmet|Glimmora|Greavard|Houndstone|Flamigo|Cetoddle|Cetitan|Veluza|Dondozo|Tatsugiri Curly|Annihilape|Clodsire|Farigiraf|Dudunsparce|Kingambit|Great Tusk|Scream Tail|Brute Bonnet|Flutter Mane|Slither Wing|Sandy Shocks|Iron Treads|Iron Bundle|Iron Hands|Iron Jugulis|Iron Moth|Iron Thorns|Frigibax|Arctibax|Baxcalibur|Gimmighoul|Gholdengo|Wo-Chien|Chien-Pao|Ting-Lu|Chi-Yu|Roaring Moon|Iron Valiant|Koraidon|Miraidon|Walking Wake|Iron Leaves|Dipplin|Poltchageist|Sinistcha|Okidogi|Munkidori|Fezandipiti|Ogerpon|Archaludon|Hydrapple|Gouging Fire|Raging Bolt|Iron Boulder|Iron Crown|Terapagos|Pecharunt".split("|");
+
 /* ===== utilidades ===== */
 var $ = function (s, el) { return (el || document).querySelector(s); };
 function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
@@ -1059,6 +1062,39 @@ async function saveFile(filename, data) {
   if (typeof data === "string") { copyText(data, "Download indisponível aqui: o conteúdo foi copiado."); return false; }
   toast("Download indisponível neste acesso."); return false;
 }
+
+/* ===== detectar os Pokémon pelo nome do deck ===== */
+function lev(a, b) {
+  if (Math.abs(a.length - b.length) > 2) return 9;
+  var d = []; for (var i = 0; i <= a.length; i++) { d[i] = [i]; } for (var j = 1; j <= b.length; j++) d[0][j] = j;
+  for (i = 1; i <= a.length; i++) for (j = 1; j <= b.length; j++) { d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1); }
+  return d[a.length][b.length];
+}
+function detectIcons(arch) {
+  var txt = lc(arch).normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[’']/g, "");
+  if (!txt.trim() || typeof DEX_NAMES === "undefined") return [];
+  var found = [];
+  function add(name, pos) { if (!found.some(function (f) { return f.name === name; })) found.push({ name: name, pos: pos }); }
+  DEX_NAMES.forEach(function (n) {
+    var k = lc(n).normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[’'.]/g, "");
+    if (k.length < 3) return;
+    var re = new RegExp("(^|[^a-z])" + k.replace(/[-\s]/g, "[-\\s]?") + "($|[^a-z])"), m = re.exec(txt);
+    if (m) add(n, m.index);
+  });
+  if (found.length < 2) {
+    var pos = 0;
+    txt.split(/[^a-z]+/).forEach(function (w) {
+      pos = txt.indexOf(w, pos);
+      if (w.length < 5 || /^(baby|mega|power|hand|festival|lead|inspiration|mysterious|rock|equipe|rocket|esconde|some|turbo|control)$/.test(w)) return;
+      if (found.some(function (f) { return lc(f.name) === w; })) return;
+      for (var i = 0; i < DEX_NAMES.length; i++) { var k = lc(DEX_NAMES[i]); if (k.length >= 5 && (lev(w, k) <= 1 || (w.length >= 6 && lev(w, k) <= 2 && w[0] === k[0]))) { add(DEX_NAMES[i], pos); break; } }
+    });
+  }
+  found.sort(function (a, b) { return a.pos - b.pos; });
+  return found.slice(0, 2).map(function (f) { return f.name; });
+}
+var _imgSrcCore = imgSrc;
+imgSrc = function (ref) { if (ref && typeof ref === "object" && typeof ref.url === "string" && /^https:\/\/[^\s"<>]+$/.test(ref.url)) return ref.url; return _imgSrcCore(ref); };
 
 /* ===== casca: barra superior, faixa de admin, rodapé ===== */
 var PAGES = [["tournament", "Torneio Ao Vivo", "Torneio", "trophy"], ["metagame", "Metagame & Decks", "Metagame", "pie"], ["matrix", "Confrontos Diretos", "Confrontos", "swords"], ["history", "Histórico de Torneios", "Histórico", "history"], ["ranking", "Ranking da Temporada", "Ranking", "star"], ["rules", "Regras TCG", "Regras", "book"]];
@@ -1532,17 +1568,17 @@ var MODALS = {
       var img = (f.deckImages || [])[i];
       return '<div class="slot"><span class="tiny" style="font-weight:800;color:var(--muted)">' + (i ? "2º Pokémon (Apoio / Opcional)" : "1º Pokémon (Principal)") + "</span>" + deckHex(arch || "?", img, "lg") +
         '<input type="text" id="m-icon' + i + '" data-m="icon' + i + '" list="dl-icons" maxlength="30" placeholder="' + (i ? "Ex: Pidgeot" : "Ex: Charizard") + '" value="' + esc((f.deckIcons || [])[i] || "") + '">' +
-        '<div class="row" style="justify-content:center"><button class="btn sm" data-a="pick" data-kind="icon' + i + '">' + ic("upload", "sm") + (img ? "Trocar imagem" : "Enviar imagem") + "</button>" + (img ? '<button class="btn sm icon danger" data-a="p-icon-del" data-i="' + i + '" aria-label="Remover imagem">' + ic("trash", "sm") + "</button>" : "") + "</div></div>";
+        '<div class="row" style="justify-content:center"><button class="btn sm" data-a="pick" data-kind="icon' + i + '">' + ic("upload", "sm") + (img ? "Trocar imagem" : "Enviar imagem") + "</button>" + (img ? '<button class="btn sm icon danger" data-a="p-icon-del" data-i="' + i + '" aria-label="Remover imagem">' + ic("trash", "sm") + "</button>" : "") + "</div>" +
+        '<input type="url" id="m-url' + i + '" data-m="url' + i + '" maxlength="400" placeholder="ou cole um link de imagem (https://...)" value="' + esc(f["url" + i] != null ? f["url" + i] : (img && img.url) || "") + '"></div>';
     }
-    var names = {}; S.t.players.concat(trainersList()).forEach(function (p) { (p.deckIcons || []).forEach(function (n) { if (n) names[n] = 1; }); });
-    var dl = '<datalist id="dl-icons">' + Object.keys(names).sort().map(function (n) { return '<option value="' + esc(n) + '">'; }).join("") + "</datalist>";
+    var dl = dexDatalist();
     var deck = f.deck;
     var dz = deck ? '<div class="row" style="align-items:flex-start;flex-wrap:nowrap"><img src="' + esc(imgSrc(deck)) + '" alt="Prévia da decklist" style="width:90px;height:120px;object-fit:cover;border-radius:12px;border:1px solid var(--line)"><div class="stack" style="gap:6px"><b class="small" style="color:var(--win)">Imagem da Decklist carregada!</b><div class="row"><button class="btn sm" data-a="pick" data-kind="pdeck">Substituir</button><button class="btn sm danger" data-a="p-deck-del">' + ic("trash", "sm") + "Remover</button></div></div></div>"
       : '<button class="dropzone" data-a="pick" data-kind="pdeck" data-drop="pdeck">' + ic("upload", "lg") + "<b>Clique para anexar foto da decklist</b><span class=\"tiny\">PNG, JPG ou WebP (otimizado automaticamente)</span></button>";
     var body = (f.err ? '<div class="banner warn">' + esc(f.err) + "</div>" : "") +
       '<label class="field"><span>Nome do Treinador / Jogador *</span><input type="text" id="m-name" data-m="name" maxlength="40" placeholder="Ex: Ana, Rapha, Yuri..." value="' + esc(f.name || "") + '"></label>' +
       '<div class="field"><div class="row between"><span style="font-size:.72rem;font-weight:800;color:var(--muted);text-transform:uppercase">Deck / Arquétipo *</span><span class="row"><button class="btn sm ghost" data-a="p-creating">+ Criar Arquétipo</button><span class="seg"><button data-a="p-mode" data-v="list" aria-pressed="' + (f.mode === "list") + '">Lista</button><button data-a="p-mode" data-v="manual" aria-pressed="' + (f.mode === "manual") + '">Digitar</button></span></span></div>' + newArch + archUI + "</div>" +
-      '<div class="field"><span>Ícones do Deck (até 2 Pokémon)</span><p class="tiny muted">Escreva o nome dos Pokémon do deck (ex.: Zoroark / Dudunsparce). Se quiser, envie uma imagem sua para cada ícone.</p>' + dl + '<div class="slotgrid">' + slot(0) + slot(1) + "</div>" + ((f.deckIcons || []).some(Boolean) ? '<div class="row"><button class="btn sm" data-a="p-swap">' + ic("shuffle", "sm") + "Inverter</button></div>" : "") + "</div>" +
+      '<div class="field"><div class="row between"><span style="font-size:.72rem;font-weight:800;color:var(--muted);text-transform:uppercase">Ícones do Deck (até 2 Pokémon)</span><button class="btn sm" data-a="p-detect">' + ic("sparkles", "sm") + 'Detectar pelo nome do deck</button></div><p class="tiny muted">Os nomes são preenchidos a partir do arquétipo (ex.: "Mega Lopunny / Pidgeot"). Para mostrar uma imagem no ícone, envie um arquivo ou cole o link de uma imagem.</p>' + dl + '<div class="slotgrid">' + slot(0) + slot(1) + "</div>" + ((f.deckIcons || []).some(Boolean) ? '<div class="row"><button class="btn sm" data-a="p-swap">' + ic("shuffle", "sm") + "Inverter</button></div>" : "") + "</div>" +
       '<div class="field"><span>Foto / Print da Decklist (imagem)</span><p class="tiny muted">Permite que os adversários vejam a lista de cartas depois que o torneio começar.</p>' + dz + "</div>" +
       '<label class="field"><span>Observações do Jogador (opcional)</span><textarea id="m-notes" data-m="notes" rows="2" maxlength="300" placeholder="Ex: Jogador júnior, primeira vez em torneio...">' + esc(f.notes || "") + "</textarea></label>";
     return shell("", m.id ? "Editar Treinador" : "Inscrever Treinador", "Cadastre o jogador, o deck, os ícones e a decklist", body,
@@ -1817,7 +1853,7 @@ MODALS.signup = function (m) {
   var body = (f.err ? '<div class="banner warn">' + esc(f.err) + "</div>" : "") + (!sl.free ? '<div class="banner">' + ic("info") + "<span>As vagas estão esgotadas. Seu pedido entra na <strong>lista de espera</strong> em ordem de chegada.</span></div>" : "") +
     '<label class="field"><span>Seu nome *</span><input type="text" id="m-sname" data-m="name" maxlength="40" placeholder="Como você aparece nas chaves" value="' + esc(f.name || "") + '"></label>' +
     '<label class="field"><span>Deck / Arquétipo *</span><input type="text" id="m-sarch" data-m="arch" list="dl-arch" maxlength="60" placeholder="Escolha da lista ou digite" value="' + esc(f.arch || "") + '"><datalist id="dl-arch">' + list.map(function (a) { return '<option value="' + esc(a) + '">'; }).join("") + "</datalist></label>" +
-    '<div class="fields"><label class="field"><span>Pokémon principal</span><input type="text" id="m-si0" data-m="icon0" maxlength="30" placeholder="Ex: Charizard" value="' + esc(f.icon0 || "") + '"></label><label class="field"><span>Pokémon de apoio</span><input type="text" id="m-si1" data-m="icon1" maxlength="30" placeholder="Ex: Pidgeot" value="' + esc(f.icon1 || "") + '"></label></div>' +
+    dexDatalist() + '<div class="fields"><label class="field"><span>Pokémon principal</span><input type="text" id="m-si0" data-m="icon0" list="dl-icons" maxlength="30" placeholder="Ex: Charizard (preenche sozinho pelo deck)" value="' + esc(f.icon0 || "") + '"></label><label class="field"><span>Pokémon de apoio</span><input type="text" id="m-si1" data-m="icon1" list="dl-icons" maxlength="30" placeholder="Ex: Pidgeot" value="' + esc(f.icon1 || "") + '"></label></div>' +
     '<div class="field"><span>Decklist</span>' + dz + "</div>" +
     '<label class="field"><span>Observações (opcional)</span><textarea id="m-snotes" data-m="notes" rows="2" maxlength="300" placeholder="Ex: primeira vez em torneio">' + esc(f.notes || "") + "</textarea></label>" +
     '<p class="tiny muted">O organizador aprova a inscrição. Envio único: depois de aprovada, só o organizador altera a decklist.</p>';
@@ -1883,6 +1919,9 @@ MODALS.settings = function (m) {
   html = html.replace('Arquétipos</button></div>', 'Arquétipos</button><button data-a="setpass-open">' + ic("lock", "sm") + "Login e senha</button></div>");
   return html;
 };
+
+var _dexDL = null;
+function dexDatalist() { if (!_dexDL) _dexDL = '<datalist id="dl-icons">' + (typeof DEX_NAMES !== "undefined" ? DEX_NAMES : []).map(function (n) { return '<option value="' + esc(n) + '">'; }).join("") + "</datalist>"; return _dexDL; }
 
 /* ===== render ===== */
 function captureFocus() {
@@ -2280,7 +2319,14 @@ function savePlayer() {
   if (!arch) { f.err = "Selecione ou informe o arquétipo do deck."; return renderModals(); }
   if (f.mode === "manual") { var list = (S.settings.customArchetypes || []).slice(); if (list.indexOf(arch) < 0 && DEFAULT_META.indexOf(arch) < 0) { list.unshift(arch); Store.saveSettings(Object.assign({}, S.settings, { customArchetypes: list })); } }
   var icons = [f.icon0 != null ? f.icon0 : (f.deckIcons || [])[0], f.icon1 != null ? f.icon1 : (f.deckIcons || [])[1]].map(function (x) { return String(x || "").trim(); });
+  if (!icons[0] && !icons[1]) icons = detectIcons(arch).concat(["", ""]).slice(0, 2);
   var imgs = (f.deckImages || []).slice(0, 2);
+  for (var ui = 0; ui < 2; ui++) {
+    var u = f["url" + ui]; if (u == null) continue; u = String(u).trim();
+    if (!u) { if (imgs[ui] && imgs[ui].url) imgs[ui] = null; continue; }
+    if (!/^https:\/\/[^\s"<>]+$/.test(u)) { f.err = "O link da imagem " + (ui + 1) + " precisa começar com https:// e não pode ter espaços."; return renderModals(); }
+    imgs[ui] = { url: u };
+  }
   var data = { name: name.slice(0, 40), deckName: arch, deckArchetype: arch, deckIcons: icons.filter(Boolean), deckImages: imgs.filter(Boolean), notes: String(f.notes || "").trim() };
   var pid = m.id || uid(), deckChanged = JSON.stringify(f.deck || null) !== JSON.stringify(f.deckOrig || null);
   var inT = S.t.players.some(function (p) { return p.id === pid; });
@@ -2428,7 +2474,8 @@ Object.assign(A, {
     var dup = S.t.players.some(function (p) { return lc(p.name) === lc(name); }) || values(S.signups).some(function (s) { return s.status === "pending" && lc(s.name) === lc(name); });
     if (dup) { f.err = "Já existe uma inscrição com esse nome. Fale com o organizador se for outra pessoa."; return renderModals(); }
     var id = "s-" + Date.now() + "-" + Math.random().toString(36).slice(2, 6);
-    Store.put("signups", id, { name: name.slice(0, 40), deckArchetype: arch.slice(0, 60), deckIcons: [f.icon0, f.icon1].map(function (x) { return String(x || "").trim(); }).filter(Boolean), notes: String(f.notes || "").trim().slice(0, 300), decklist: f.deck || null, status: "pending", at: Date.now() });
+    var sic = [f.icon0, f.icon1].map(function (x) { return String(x || "").trim(); }).filter(Boolean); if (!sic.length) sic = detectIcons(arch);
+    Store.put("signups", id, { name: name.slice(0, 40), deckArchetype: arch.slice(0, 60), deckIcons: sic, notes: String(f.notes || "").trim().slice(0, 300), decklist: f.deck || null, status: "pending", at: Date.now() });
     var mine = lsGet("hl2.mySignups") || []; mine.push(id); lsSet("hl2.mySignups", mine);
     closeModal(); render(); toast("Inscrição enviada! Aguarde a aprovação do organizador.");
   },
@@ -2519,6 +2566,12 @@ document.addEventListener("keydown", function (e) {
   var tm = topModal(); if (!tm) return;
   if (tm.type === "login" && /^m-l(user|pass)$/.test(e.target.id)) { e.preventDefault(); A["login-submit"](); }
 });
+
+A["p-detect"] = function () {
+  var m = topModal(), f = m.f, arch = f.mode === "manual" ? f.archTxt : f.arch, d = detectIcons(arch || "");
+  if (!d.length) return toast("Não reconheci nenhum Pokémon no nome do deck. Escreva os nomes nos campos.");
+  f.icon0 = d[0] || ""; f.icon1 = d[1] || ""; f.deckIcons = [f.icon0, f.icon1]; renderModals(); toast("Detectado: " + d.join(" / "));
+};
 
 /* ===== modo GitHub Pages: dados no Firebase (Firestore + Authentication) ===== */
 var FB = { app: null, fs: null, auth: null, imgs: {}, loading: {} };
