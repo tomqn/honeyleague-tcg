@@ -1,12 +1,10 @@
-/* Cole aqui a configuração do SEU projeto Firebase
-   (Console do Firebase › Configurações do projeto › Seus apps › App da Web › "Configuração do SDK").
-   Enquanto estes campos tiverem "COLE_AQUI", o site funciona só no navegador de quem abre (sem nuvem). */
-var cfg = {
-  apiKey: "COLE_AQUI",
-  authDomain: "COLE_AQUI.firebaseapp.com",
-  projectId: "COLE_AQUI",
-  storageBucket: "COLE_AQUI.appspot.com",
-  messagingSenderId: "COLE_AQUI",
-  appId: "COLE_AQUI"
+/* Configuração do projeto Firebase "honeyleague-tcg".
+   Estes valores são públicos por natureza; quem protege os dados são as regras do Firestore. */
+window.FIREBASE_CONFIG = {
+  apiKey: "AIzaSyB0EchXxS2nj0VQbMsjpW-8FanrzY44vao",
+  authDomain: "honeyleague-tcg.firebaseapp.com",
+  projectId: "honeyleague-tcg",
+  storageBucket: "honeyleague-tcg.firebasestorage.app",
+  messagingSenderId: "524872508065",
+  appId: "1:524872508065:web:b53de888c784c7e88046e0"
 };
-if (cfg.apiKey.indexOf("COLE_AQUI") < 0) window.FIREBASE_CONFIG = cfg;
