@@ -1189,7 +1189,7 @@ imgSrc = function (ref) { if (ref && typeof ref === "object" && typeof ref.url =
 /* ===== casca: barra superior, faixa de admin, rodapé ===== */
 var PAGES = [["tournament", "Torneio Ao Vivo", "Torneio", "trophy"], ["metagame", "Metagame & Decks", "Metagame", "pie"], ["matrix", "Confrontos Diretos", "Confrontos", "swords"], ["history", "Histórico de Torneios", "Histórico", "history"], ["ranking", "Ranking da Temporada", "Ranking", "star"], ["rules", "Regras TCG", "Regras", "book"]];
 function vNav() {
-  var t = S.t, badge = { tournament: t.currentRound > 0 ? '<span class="pill honey mono">R' + t.currentRound + "/" + t.totalRounds + "</span>" : '<span class="pill win">Aberto</span>',
+  var t = S.t, badge = { tournament: t.currentRound > 0 ? '<span class="pill honey mono">R' + t.currentRound + "/" + t.totalRounds + "</span>" : (S.settings.regOpen ? '<span class="pill win">Inscrições</span>' : '<span class="pill">Em breve</span>'),
     metagame: t.players.length ? '<span class="pill mono">' + t.players.length + "</span>" : "", history: historyList().length ? '<span class="pill mono">' + historyList().length + "</span>" : "" };
   var themeLbl = S.themeMode === "system" ? ic("laptop") + '<span class="hide-sm">Auto (' + (resolvedDark() ? "Escuro" : "Claro") + ")</span>" : S.themeMode === "dark" ? ic("moon") + '<span class="hide-sm">Tema Escuro</span>' : ic("sun") + '<span class="hide-sm">Tema Claro</span>';
   var tools = '<button class="chip-btn" data-a="theme" title="Alternar tema: Auto, Claro ou Escuro" aria-label="Alternar tema">' + themeLbl + "</button>";
@@ -1218,6 +1218,7 @@ function vHero() {
   var t = S.t, admin = isAdmin(), src = imgSrc(t.banner);
   var acts = "";
   if (admin) {
+    if (t.currentRound === 0) acts += '<button class="btn ' + (S.settings.regOpen ? "" : "win") + '" data-a="reg-open-toggle">' + ic(S.settings.regOpen ? "lock" : "userplus") + (S.settings.regOpen ? "Fechar inscrições" : "Abrir inscrições") + "</button>";
     if (t.currentRound === 0) acts += '<button class="btn honey" data-a="next-round">' + ic("play") + "Começar Rodada 1</button>";
     acts += '<button class="btn" data-a="player-new">' + ic("userplus") + "Inscrever Treinador</button>";
     acts += '<button class="btn wa" data-a="wa" data-mode="' + (t.currentRound === 0 ? "registration" : "round") + '">' + ic("msg") + (t.currentRound === 0 ? "Divulgar no WhatsApp" : "Avisos WhatsApp") + "</button>";
@@ -1232,7 +1233,7 @@ function vHero() {
   return '<section class="card hero"><div class="hero-l"><div class="row between"><span class="eyebrow">' + ic("sparkles", "sm") + "HoneyLeague TCG · Sistema Suíço Oficial</span>" +
     (admin ? '<span class="pill win">✓ Modo Administrador Ativo</span>' : '<span class="pill">' + ic("eye", "sm") + "Visualização de Visitante</span>") + "</div>" +
     "<h1>" + esc(t.title) + '</h1><p class="lede">Torneio oficial com pontuação clássica (<strong>Vitória 3pts · Empate 1pt · Derrota 0pts</strong>) e desempate em tempo real por <strong>OMW%</strong> e <strong>OOW%</strong>, com piso de 33,33%.</p>' +
-    '<div class="metrics"><div class="metric">' + ic("users", "lg") + "<div><small>Treinadores</small><strong>" + t.players.length + ' Inscritos</strong></div></div><div class="metric">' + ic("swords", "lg") + "<div><small>Rodadas Suíças</small><strong>" +
+    '<div class="metrics"><div class="metric">' + ic("users", "lg") + "<div><small>Treinadores" + (t.currentRound === 0 ? (S.settings.regOpen ? ' · <span style="color:var(--win)">inscrições abertas</span>' : " · inscrições fechadas") : "") + "</small><strong>" + t.players.length + ' Inscritos</strong></div></div><div class="metric">' + ic("swords", "lg") + "<div><small>Rodadas Suíças</small><strong>" +
     (t.currentRound > 0 ? "Rodada " + t.currentRound + " de " + t.totalRounds : t.totalRounds + " Rodadas") + '</strong></div></div><button class="metric" data-a="page" data-p="rules">' + ic("shield", "lg") + "<div><small>Desempate</small><strong>OMW% / OOW% →</strong></div></button></div>" +
     (acts ? '<div class="row">' + acts + "</div>" : "") + '</div><div class="hero-r" id="bannerDrop">' + right + "</div></section>";
 }
