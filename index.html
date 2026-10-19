@@ -1561,7 +1561,7 @@ function vSchedule(m, rn, p1, p2) {
 }
 
 /* ===== Inscrição pelo próprio jogador ===== */
-function signupList(status) { return values(S.signups).filter(function (s) { return s.status === status; }).sort(function (a, b) { return (a.at || 0) - (b.at || 0); }); }
+function signupList(status) { return Object.keys(S.signups || {}).map(function (k) { return Object.assign({}, S.signups[k], { id: k }); }).filter(function (s) { return s.status === status && !(status === "pending" && s.uid && S.t.players.some(function (p) { return p.id === s.uid || p.uid === s.uid; })); }).sort(function (a, b) { return (a.at || 0) - (b.at || 0); }); }
 function slotsInfo() { var max = +S.settings.maxSlots || 12, used = S.t.players.length; return { max: max, used: used, free: Math.max(0, max - used) }; }
 function vSignupPublic() {
   if (started() || !S.settings.regOpen) return "";
@@ -3174,7 +3174,7 @@ function mergeEntries(t) {
   if (!accountsOn()) return t;
   var st = t.status !== "registration" || t.currentRound > 0, changed = false;
   var players = t.players.filter(function (p) {
-    if (!st && dropFor(p)) { changed = true; return false; }
+    if (!st && dropFor(p)) { mergeRemoved.push(p); changed = true; return false; }
     return true;
   }).map(function (p) {
     if (st && p.active !== false && dropFor(p)) { changed = true; return Object.assign({}, p, { active: false, dropRound: dropFor(p).round || t.currentRound, selfDrop: true }); }
@@ -3189,7 +3189,7 @@ function mergeEntries(t) {
         if (players.length >= max) return;
         players.push({ id: s.uid, uid: s.uid, name: s.name, deckName: s.deckArchetype, deckArchetype: s.deckArchetype, deckIcons: s.deckIcons || [], deckImages: [], deckType: s.deckType || "", notes: s.notes || "", active: true, createdAt: s.at || Date.now(), viaProfile: true });
         if (s.decklist && !S.decks[s.uid]) S.decks[s.uid] = Object.assign({ at: s.at, by: "jogador" }, s.decklist);
-        changed = true;
+        mergeAdded.push(s); changed = true;
       });
   }
   if (!changed) return t;
@@ -3197,8 +3197,26 @@ function mergeEntries(t) {
   if (!st) out.totalRounds = HL.recommendedRounds(players.length);
   return out;
 }
+var mergeAdded = [], mergeRemoved = [], mergeTimer = null;
 var _renderBase = render;
-render = function () { S.t = mergeEntries(S.t); return _renderBase(); };
+render = function () {
+  mergeAdded = []; mergeRemoved = [];
+  var before = S.t; S.t = mergeEntries(S.t);
+  /* o organizador grava no torneio quem entrou ou saiu pelo perfil (jogadores não podem gravar o torneio) */
+  if (S.t !== before && isAdmin() && FB.fs) {
+    var add = mergeAdded.slice(), rem = mergeRemoved.slice();
+    clearTimeout(mergeTimer);
+    mergeTimer = setTimeout(function () {
+      Store.saveT(Object.assign({}, S.t, { updatedAt: Date.now() }));
+      add.forEach(function (s) {
+        if (s.decklist) Store.put("decks", s.uid, Object.assign({ at: s.at || Date.now(), by: "jogador" }, s.decklist));
+        Store.put("signups", s.uid, Object.assign({}, S.signups[s.uid] || s, { status: "approved", playerId: s.uid }));
+      });
+      rem.forEach(function (p) { var k = p.uid || p.id; if (S.drops[k] && !S.drops[k].round) Store.del("drops", k); });
+    }, 400);
+  }
+  return _renderBase();
+};
 function waitlistPos() {
   if (!S.player) return 0;
   var list = values(S.signups).filter(function (s) { return s.uid && s.status === "pending" && !S.t.players.some(function (p) { return p.id === s.uid || p.uid === s.uid; }); }).sort(function (a, b) { return (a.at || 0) - (b.at || 0); });
@@ -3229,7 +3247,7 @@ Object.assign(A, {
         try {
           var me = myTournamentPlayer(), su = mySignup();
           if (su) await FB.fs.doc("signups/" + S.player.uid).delete();
-          if (me && !me.viaProfile) await FB.fs.doc("drops/" + S.player.uid).set({ at: Date.now(), round: 0 });
+          if (me) await FB.fs.doc("drops/" + S.player.uid).set({ at: Date.now(), round: 0 });
           S.t = Object.assign({}, S.t, { players: S.t.players.filter(function (p) { return p.id !== S.player.uid && p.uid !== S.player.uid; }) });
           render(); toast("Inscrição cancelada.");
         } catch (e) { toast("Não foi possível cancelar (" + (e.code || e.message) + ")."); }
