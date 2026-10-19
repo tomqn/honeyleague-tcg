@@ -1356,7 +1356,7 @@ function vPlayers() {
   var cards = list.map(function (p) {
     var reg = regFor(p), hasDeck = !!deckOf(p.id), lbl, icn;
     if (hasDeck) { if (!st && !admin) { lbl = "Decklist Oculta"; icn = "lock"; } else { lbl = "Ver Decklist"; icn = "image"; } }
-    else { lbl = admin ? "Upar Decklist" : st ? "Sem Decklist" : "Anexar (1x)"; icn = admin || !st ? "upload" : "file"; }
+    else { var own = typeof ownsPlayer === "function" && ownsPlayer(p); lbl = admin ? "Upar Decklist" : own && !st ? "Anexar pelo perfil" : "Sem Decklist"; icn = admin || (own && !st) ? "upload" : "file"; }
     return '<article class="card pcard' + (p.active === false ? " drop" : "") + '"><div class="head"><div style="min-width:0"><h4>' + esc(p.name) + "</h4>" + (p.active === false ? '<span class="pill loss">DROP</span>' : '<span class="pill win">ATIVO</span>') + "</div>" +
       (admin ? '<div class="row" style="gap:2px"><button class="btn sm icon ghost" data-a="player-edit" data-id="' + p.id + '" title="Editar Treinador">' + ic("edit", "sm") + '</button><button class="btn sm icon ghost" data-a="player-del" data-id="' + p.id + '" title="Remover Treinador">' + ic("trash", "sm") + "</button></div>" : "") + "</div>" +
       deckBadge(p, "", true) +
@@ -1680,9 +1680,9 @@ var MODALS = {
   deck: function (m) {
     var p = m.virtual || player(m.id); if (!p) return shell("narrow", "Decklist", "", "<p>Jogador não encontrado.</p>");
     var admin = isAdmin(), st = started(), ref = m.virtual ? m.virtual.decklist : deckOf(p.id), has = !!imgSrc(ref);
-    var canAttach = !m.virtual && (admin || (!st && !has)), canView = admin || m.virtual || (st && has);
-    var badge = m.virtual ? '<span class="pill">Edição arquivada</span>' : admin ? '<span class="pill win">Admin (edição liberada)</span>' : has && !st ? '<span class="pill honey">' + ic("lock", "sm") + "Decklist anexada (sigilo pré-torneio)</span>" : has ? '<span class="pill win">' + ic("checkc", "sm") + "Decklist pública (torneio em andamento)</span>" : st ? '<span class="pill">Envio encerrado (torneio iniciado)</span>' : '<span class="pill tie">Envio único permitido</span>';
-    var lockNote = !admin && !m.virtual && (st || has) ? '<div class="banner">' + ic("lock") + "<span>" + (st ? "O torneio está em andamento. Para garantir a integridade das partidas, só o organizador pode modificar ou anexar decklists." : "A decklist já foi anexada e travada (1 envio por jogador). Para correções, procure o organizador.") + "</span></div>" : "";
+    var canAttach = !m.virtual && admin, canView = admin || m.virtual || (st && has);
+    var badge = m.virtual ? '<span class="pill">Edição arquivada</span>' : admin ? '<span class="pill win">Admin (edição liberada)</span>' : has && !st ? '<span class="pill honey">' + ic("lock", "sm") + "Decklist anexada (sigilo pré-torneio)</span>" : has ? '<span class="pill win">' + ic("checkc", "sm") + "Decklist pública (torneio em andamento)</span>" : '<span class="pill">Sem decklist</span>';
+    var lockNote = !admin && !m.virtual ? '<div class="banner">' + ic("lock") + "<span>" + (S.player ? "Só o dono do cadastro anexa a decklist, pelo próprio perfil, até a Rodada 1. Depois disso, só o organizador altera." : "A decklist é anexada pelo próprio jogador, no perfil dele, ou pelo organizador.") + "</span></div>" : "";
     var tools = "";
     if (canView && has) tools += '<button class="btn sm" data-a="zoom" data-d="1">' + ic("zin", "sm") + 'Zoom +</button><button class="btn sm" data-a="zoom" data-d="-1">' + ic("zout", "sm") + 'Zoom -</button><button class="btn sm" data-a="rotate">' + ic("rotate", "sm") + "Girar</button>" + ((m.z || 1) !== 1 || (m.rot || 0) ? '<button class="btn sm ghost" data-a="zoom-reset">Resetar vista</button>' : "");
     if (!canView && has) tools += '<span class="small muted">' + ic("lock", "sm") + " Sigilo competitivo ativo antes do início do torneio</span>";
@@ -1692,8 +1692,8 @@ var MODALS = {
     var stage;
     if (has && !canView) stage = '<div class="lock"><span class="ring" style="width:56px;height:56px;border-radius:18px;background:var(--honey-soft);color:var(--honey-strong);display:grid;place-items:center">' + ic("lock", "lg") + '</span><h4>Decklist oculta até o início do torneio</h4><p class="muted small" style="max-width:52ch">A decklist de <strong>' + esc(p.name) + "</strong> foi anexada e confirmada. Por sigilo competitivo, só o organizador pode vê-la agora. Assim que a <strong>Rodada 1</strong> começar, todas as decklists ficam visíveis.</p></div>";
     else if (has) stage = '<div class="imgstage"><img src="' + esc(imgSrc(ref)) + '" alt="Decklist de ' + esc(HL.archOf(p)) + '" style="transform:scale(' + (m.z || 1) + ") rotate(" + (m.rot || 0) + 'deg)"></div>';
-    else stage = '<div class="lock"><span style="width:56px;height:56px;border-radius:18px;background:var(--sunk);display:grid;place-items:center">' + ic(st && !admin ? "lock" : "image", "lg") + "</span><h4>" + (st && !admin ? "Inscrições de decklists encerradas" : !admin ? "Anexar foto da decklist (envio único)" : "Nenhuma imagem de decklist enviada") + '</h4><p class="muted small" style="max-width:52ch">' +
-      (st && !admin ? "O torneio já começou. Visitantes não podem anexar novas listas no meio da competição; procure o organizador." : !admin ? esc(p.name) + " pode enviar a foto das 60 cartas. Atenção: é permitido anexar só 1 vez; depois, apenas o organizador altera." : "Como organizador, você pode anexar a foto da lista de " + esc(p.name) + " a qualquer momento.") + "</p>" +
+    else stage = '<div class="lock"><span style="width:56px;height:56px;border-radius:18px;background:var(--sunk);display:grid;place-items:center">' + ic(st && !admin ? "lock" : "image", "lg") + "</span><h4>" + (!admin ? "Nenhuma decklist enviada" : "Nenhuma imagem de decklist enviada") + '</h4><p class="muted small" style="max-width:52ch">' +
+      (!admin ? esc(p.name) + " ainda não anexou a decklist. Só o próprio jogador, pelo perfil, ou o organizador podem enviar." : "Como organizador, você pode anexar a foto da lista de " + esc(p.name) + " a qualquer momento.") + "</p>" +
       (canAttach ? '<button class="btn honey" data-a="pick" data-kind="deck">' + ic("upload") + (admin ? "Fazer upload como organizador" : "Anexar foto / print (envio único)") + "</button>" : "") + "</div>";
     var body = '<div class="row between"><div class="row">' + deckBadge(p, "", true) + badge + "</div></div>" + lockNote + ((tools || right) ? '<div class="row between"><div class="row">' + tools + '</div><div class="row">' + right + "</div></div>" : "") + stage +
       '<p class="small"><strong>Notas do Treinador:</strong> <span class="muted">' + esc(p.notes || "Sem anotações adicionais informadas pelo jogador.") + "</span></p>";
@@ -1945,7 +1945,7 @@ MODALS.signup = function (m) {
     '<label class="field"><span>Seu nome *</span><input type="text" id="m-sname" data-m="name" maxlength="40" placeholder="Como você aparece nas chaves" value="' + esc(f.name || "") + '"></label>' +
     '<label class="field"><span>Deck / Arquétipo *</span><input type="text" id="m-sarch" data-m="arch" list="dl-arch" maxlength="60" placeholder="Escolha da lista ou digite" value="' + esc(f.arch || "") + '"><datalist id="dl-arch">' + list.map(function (a) { return '<option value="' + esc(a) + '">'; }).join("") + "</datalist></label>" +
     dexDatalist() + '<div class="fields"><label class="field"><span>Pokémon principal</span><input type="text" id="m-si0" data-m="icon0" list="dl-icons" maxlength="30" placeholder="Ex: Charizard (preenche sozinho pelo deck)" value="' + esc(f.icon0 || "") + '"></label><label class="field"><span>Pokémon de apoio</span><input type="text" id="m-si1" data-m="icon1" list="dl-icons" maxlength="30" placeholder="Ex: Pidgeot" value="' + esc(f.icon1 || "") + '"></label></div>' +
-    '<div class="field"><span>Decklist</span>' + dz + "</div>" +
+    '<p class="tiny muted">A decklist é enviada depois, pelo organizador.</p>' +
     '<label class="field"><span>Observações (opcional)</span><textarea id="m-snotes" data-m="notes" rows="2" maxlength="300" placeholder="Ex: primeira vez em torneio">' + esc(f.notes || "") + "</textarea></label>" +
     '<p class="tiny muted">O organizador aprova a inscrição. Envio único: depois de aprovada, só o organizador altera a decklist.</p>';
   return shell("", "Inscrição no torneio", esc(S.t.title), body, '<button class="btn" data-a="close">Cancelar</button><button class="btn honey" data-a="signup-save"' + (m.busy ? " disabled" : "") + ">" + ic("check", "sm") + (m.busy ? "Enviando foto..." : sl.free ? "Enviar inscrição" : "Entrar na lista de espera") + "</button>", ic("userplus"));
@@ -2465,7 +2465,7 @@ async function handleFiles(kind, files) {
       if (kind === "pdeck") m.f.deck = r; else { m.f.deckImages = (m.f.deckImages || []).slice(); m.f.deckImages[kind === "icon0" ? 0 : 1] = r; }
       m.busy = false; renderModals(); return;
     }
-    if (kind === "sdeck") {
+    if (kind === "sdeck") { return toast("A decklist é enviada pelo perfil do jogador ou pelo organizador.");
       if (!m || m.type !== "signup") return;
       m.busy = true; renderModals();
       m.f.deck = await storeImage(file, 1400); m.busy = false; renderModals(); return;
@@ -2474,7 +2474,7 @@ async function handleFiles(kind, files) {
       if (!m || m.type !== "deck") return;
       var p = player(m.id); if (!p) return;
       var admin = isAdmin(), has = !!deckOf(p.id);
-      if (!admin && (started() || has)) return toast(started() ? "O torneio já começou: só o organizador altera decklists." : "A decklist já foi anexada (permitido 1x).");
+      if (!admin) return toast("Só o dono do cadastro (pelo perfil) ou o organizador anexam decklist.");
       m.busy = true; renderModals();
       var dr = await storeImage(file, 1400);
       Store.put("decks", p.id, Object.assign({ at: Date.now(), by: admin ? "admin" : "visitor" }, dr));
@@ -3273,6 +3273,8 @@ A["settings-save"] = function () {
 var _settingsOpen = A.settings;
 A.settings = function () { _settingsOpen(); var m = topModal(); if (m && m.type === "settings") m.f.regAuto = S.settings.regAuto !== false; renderModals(); };
 PAGE_VIEWS.perfil = vProfile;
+
+function ownsPlayer(p) { return !!(p && S.player && (p.id === S.player.uid || p.uid === S.player.uid)); }
 
 /* início */
 applyTheme();
