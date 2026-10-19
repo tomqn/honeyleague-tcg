@@ -1,33 +1,54 @@
 rules_version = '2';
 // Regras do HoneyLeague TCG. Cole em: Console do Firebase › Firestore Database › Regras › Publicar.
-// O organizador é a conta admin@honeyleague.app criada em Authentication (login "admin" no site).
+// Organizador: conta admin@honeyleague.app (login "admin" no site).
+// Jogadores: contas <usuario>@jogadores.honeyleague.app criadas pelo próprio site.
 service cloud.firestore {
   match /databases/{database}/documents {
     function isAdmin() {
-      return request.auth != null && request.auth.token.email in ['admin@honeyleague.app'];
+      return request.auth != null && request.auth.token.email == 'admin@honeyleague.app';
+    }
+    function isPlayer(uid) {
+      return request.auth != null && request.auth.uid == uid
+        && request.auth.token.email.matches('^[a-z0-9][a-z0-9._-]{2,19}@jogadores[.]honeyleague[.]app$');
     }
     function small(max) { return request.resource.size() < max; }
+    function registrationOpen() {
+      return get(/databases/$(database)/documents/hl/tournament).data.status == 'registration';
+    }
 
     // Tudo é público para leitura; só o organizador altera torneio, histórico e banco de treinadores.
     match /hl/{doc}        { allow read: if true; allow write: if isAdmin(); }
     match /trainers/{id}   { allow read: if true; allow write: if isAdmin(); }
     match /history/{id}    { allow read: if true; allow write: if isAdmin(); }
 
+    // Perfil de cada jogador: público para leitura, só o dono (ou o organizador) altera.
+    match /profiles/{uid} {
+      allow read: if true;
+      allow create, update: if isAdmin() || (isPlayer(uid)
+        && request.resource.data.keys().hasOnly(['username', 'name', 'deckArchetype', 'deckIcons', 'deckType', 'notes', 'decklist', 'decklistAt', 'createdAt', 'updatedAt'])
+        && request.resource.data.name is string && request.resource.data.name.size() <= 40
+        && request.resource.data.username == request.auth.token.email.split('@')[0]
+        && small(8000));
+      allow delete: if isAdmin() || isPlayer(uid);
+    }
+
     // Fotos (decklists e banner) guardadas como imagem reduzida.
     match /images/{id} {
       allow read: if true;
-      allow create: if isAdmin() || (request.resource.data.keys().hasOnly(['data', 'at'])
+      allow create: if isAdmin() || (request.auth != null
+                    && request.resource.data.keys().hasOnly(['data', 'at'])
                     && request.resource.data.data is string
                     && request.resource.data.data.matches('^data:image/(jpeg|png|webp);base64,.*')
                     && request.resource.data.data.size() < 900000);
       allow update, delete: if isAdmin();
     }
 
-    // Decklist: o jogador anexa uma única vez; depois só o organizador altera.
+    // Decklist do torneio: o jogador com conta mantém a própria até a Rodada 1; depois só o organizador.
     match /decklists/{playerId} {
       allow read: if true;
-      allow create: if isAdmin() || (request.resource.data.keys().hasOnly(['img', 'at', 'by']) && request.resource.data.img is string);
-      allow update, delete: if isAdmin();
+      allow create, update: if isAdmin() || (isPlayer(playerId) && registrationOpen()
+        && request.resource.data.keys().hasOnly(['img', 'at', 'by']) && request.resource.data.img is string);
+      allow delete: if isAdmin();
     }
 
     // Reporte de resultado pelos jogadores (o organizador confirma ao avançar a rodada).
@@ -46,13 +67,14 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // Inscrição pelo próprio jogador (o organizador aprova).
+    // Inscrição pelo perfil: um pedido por conta (o id do pedido é o id da conta). O organizador aprova.
     match /signups/{id} {
       allow read: if true;
-      allow create: if isAdmin() || (request.resource.data.status == 'pending'
-                    && request.resource.data.keys().hasOnly(['name', 'deckArchetype', 'deckIcons', 'notes', 'decklist', 'status', 'at'])
-                    && request.resource.data.name is string && request.resource.data.name.size() <= 40 && small(4000));
-      allow update, delete: if isAdmin();
+      allow create, update: if isAdmin() || (isPlayer(id) && registrationOpen()
+        && request.resource.data.status == 'pending' && request.resource.data.uid == id
+        && request.resource.data.keys().hasOnly(['uid', 'name', 'deckArchetype', 'deckIcons', 'deckType', 'notes', 'decklist', 'status', 'at'])
+        && request.resource.data.name is string && request.resource.data.name.size() <= 40 && small(4000));
+      allow delete: if isAdmin() || isPlayer(id);
     }
   }
 }

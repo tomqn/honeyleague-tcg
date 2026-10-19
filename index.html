@@ -1003,7 +1003,11 @@ function pname(id) { var p = player(id); return p ? p.name : "Jogador desconheci
 function trainersList() { return values(S.trainers).sort(function (a, b) { return a.name.localeCompare(b.name, "pt-BR"); }); }
 function historyList() { return values(S.history).sort(function (a, b) { return (b.completedAt || 0) - (a.completedAt || 0); }); }
 function regFor(p) { var l = trainersList(); for (var i = 0; i < l.length; i++) if (l[i].id === p.id || lc(l[i].name) === lc(p.name)) return l[i]; return null; }
-function deckOf(pid) { var d = S.decks[pid]; return d && (d.asset || d.data) ? d : null; }
+function deckOf(pid) {
+  var d = S.decks[pid];
+  if (!(d && (d.asset || d.data || d.img))) { var p = S.t.players.filter(function (x) { return x.id === pid; })[0]; d = p && p.uid ? S.decks[p.uid] : null; }
+  return d && (d.asset || d.data || d.img) ? d : null;
+}
 function imgSrc(ref) {
   if (!ref) return null;
   if (typeof ref === "string") return /^(data:image\/|\/_blob\/|blob:)/.test(ref) ? ref : null;
@@ -2026,8 +2030,9 @@ function restoreFocus(k) {
   if (!k) return; var el = document.getElementById(k.id); if (!el) return;
   el.focus({ preventScroll: true }); try { if (k.s != null) el.setSelectionRange(k.s, k.e); } catch (e) { }
 }
+var PAGE_VIEWS = { tournament: vTournament, metagame: vMetagame, matrix: vMatrix, history: vHistory, ranking: vRanking, rules: vRules };
 function render() {
-  var keep = captureFocus(), page = { tournament: vTournament, metagame: vMetagame, matrix: vMatrix, history: vHistory, ranking: vRanking, rules: vRules }[S.page] || vTournament;
+  var keep = captureFocus(), page = PAGE_VIEWS[S.page] || vTournament;
   var html;
   try { html = '<a class="skip" href="#main" data-a="skip">Pular para o conteúdo</a>' + vNav() + '<main class="wrap" id="main" tabindex="-1">' + page() + "</main>" + vFooter(); }
   catch (e) { console.error(e); html = vNav() + '<main class="wrap"><div class="card empty"><h3>Algo deu errado ao montar esta página</h3><p>' + esc(e.message) + '</p><button class="btn" data-a="page" data-p="tournament">Voltar ao torneio</button></div></main>'; }
@@ -2836,7 +2841,7 @@ async function connectFirebase() {
     collection: function (path) { var c = fs.collection(path); return { onSnapshot: function (cb, err) { return c.onSnapshot(cb, err); } }; }
   };
   S.authed = false;
-  FB.auth.onAuthStateChanged(function (u) { S.authed = !!u; scheduleRender(); });
+  FB.auth.onAuthStateChanged(function (u) { if (typeof onAuth === "function") onAuth(u); else { S.authed = !!u; scheduleRender(); } });
   S.ready = true; render();
   var gotT = false;
   S.db.doc("hl/tournament").onSnapshot(function (snap) {
@@ -2848,7 +2853,7 @@ async function connectFirebase() {
     gotT = true; scheduleRender();
   }, function (e) { toast("Sem acesso aos dados do torneio (" + e.code + "). Confira as regras do Firestore."); });
   S.db.doc("hl/settings").onSnapshot(function (snap) { if (snap.exists) { S.settings = Object.assign({ customArchetypes: [], waPhone: "", publicUrl: location.href.split("#")[0], regOpen: false, maxSlots: 12, prizeTemplate: [] }, clone(snap.data())); cacheLocal("settings"); scheduleRender(); } }, function () { });
-  ["trainers", "history", "decks", "reports", "schedules", "signups"].forEach(function (k) {
+  ["trainers", "history", "decks", "reports", "schedules", "signups"].concat(COLL.profiles ? ["profiles"] : []).forEach(function (k) {
     S.db.collection(COLL[k]).onSnapshot(function (qs) {
       var m = {}; qs.docs.forEach(function (d) { m[d.id] = clone(d.data()); });
       S[k] = m; cacheLocal(k); scheduleRender();
@@ -2864,6 +2869,292 @@ onWriteError = function (e) {
   }
   return _onWriteErrorBase(e);
 };
+
+/* ===== Contas de jogador (só no site com Firebase) ===== */
+var PLAYER_DOMAIN = "jogadores.honeyleague.app";
+var ADMIN_EMAIL = "admin@" + ADMIN_DOMAIN;
+S.player = null; S.profiles = {};
+COLL.profiles = "profiles"; LOCAL.profiles = "hl2.profiles";
+function accountsOn() { return !!(FB && FB.auth); }
+function cleanUser(u) { return String(u || "").trim().toLowerCase(); }
+function validUser(u) { return /^[a-z0-9][a-z0-9._-]{2,19}$/.test(u); }
+function playerEmail(u) { return cleanUser(u) + "@" + PLAYER_DOMAIN; }
+function loginEmail(u) { u = cleanUser(u); return u === "admin" ? ADMIN_EMAIL : u.indexOf("@") >= 0 ? u : playerEmail(u); }
+function myProfile() { return S.player ? S.profiles[S.player.uid] || null : null; }
+function myTournamentPlayer() {
+  if (!S.player) return null;
+  var uid = S.player.uid;
+  return S.t.players.filter(function (p) { return p.id === uid || p.uid === uid; })[0] || null;
+}
+function mySignup() { return S.player ? S.signups[S.player.uid] || null : null; }
+function profileComplete(pr) { return !!(pr && pr.name && pr.deckArchetype); }
+
+/* ----- página "Meu perfil" ----- */
+PAGE_IDS.push("perfil");
+PAGE_VIEWS.perfil = vProfile;
+(function () { if ((location.hash || "").slice(1) === "perfil") S.page = "perfil"; })();
+
+function vProfile() {
+  if (!accountsOn()) return '<div class="card empty"><h3>Perfis indisponíveis</h3><p>As contas de jogador funcionam no site publicado.</p></div>';
+  if (!S.player) {
+    return '<div class="card empty"><span class="ring">' + ic("users", "xl") + '</span><h3>Seu perfil de treinador</h3><p>Crie uma conta com usuário e senha para guardar seu deck e sua decklist e se inscrever nos torneios com um toque.</p><div class="row" style="justify-content:center"><button class="btn honey" data-a="acc-open" data-tab="signup">' + ic("userplus") + 'Criar conta</button><button class="btn" data-a="acc-open" data-tab="login">' + ic("lock") + "Já tenho conta</button></div></div>";
+  }
+  var pr = myProfile() || {}, f = S.ui.pf || (S.ui.pf = { name: pr.name || "", arch: pr.deckArchetype || "", icon0: (pr.deckIcons || [])[0] || "", icon1: (pr.deckIcons || [])[1] || "", deckType: pr.deckType || "", notes: pr.notes || "" });
+  var ty = f.deckType || guessType({ deckArchetype: f.arch, deckIcons: [f.icon0, f.icon1].filter(Boolean) });
+  var head = '<section class="card pad row between"><div class="row" style="gap:12px">' + deckHex(f.arch || "?", null, "lg", ty) + '<div><span class="eyebrow">' + ic("users", "sm") + "Meu perfil</span><h2 style=\"margin-top:2px\">" + esc(pr.name || S.player.username) + '</h2><p class="small muted">Usuário: <strong>' + esc(S.player.username) + "</strong>" + (f.arch ? " · " + esc(f.arch) : "") + '</p></div></div><div class="row"><button class="btn" data-a="acc-pass">' + ic("lock", "sm") + 'Trocar senha</button><button class="btn danger" data-a="acc-logout">' + ic("left", "sm") + "Sair</button></div></section>";
+
+  /* cadastro */
+  var dz = imgSrc(pr.decklist)
+    ? '<div class="row" style="align-items:flex-start;flex-wrap:nowrap"><img src="' + esc(imgSrc(pr.decklist)) + '" alt="Minha decklist" data-a="pf-zoom" style="width:96px;height:128px;object-fit:cover;border-radius:12px;border:1px solid var(--line);cursor:zoom-in"><div class="stack" style="gap:6px"><span class="pill win">' + ic("check", "sm") + 'Decklist salva</span><span class="tiny muted">' + (pr.decklistAt ? "Enviada em " + new Date(pr.decklistAt).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "") + '</span><div class="row">' + (deckLocked() ? '<span class="tiny muted">' + ic("lock", "sm") + " Travada: o torneio já começou</span>" : '<button class="btn sm" data-a="pick" data-kind="pfdeck">Trocar foto</button>') + "</div></div></div>"
+    : (deckLocked() ? '<p class="small muted">' + ic("lock", "sm") + " O torneio já começou. Para anexar agora, fale com o organizador.</p>" : '<button class="dropzone" data-a="pick" data-kind="pfdeck">' + ic("upload", "lg") + '<b>Anexar foto da decklist</b><span class="tiny">Print da tela de baralho do jogo, com as 60 cartas</span></button>');
+  var form = '<section class="card pad stack"><div class="sec-title"><span class="ico">' + ic("edit") + '</span><div><h3>Meu cadastro</h3><p class="small muted">É isso que vai para a inscrição e aparece nas chaves.</p></div></div>' +
+    (S.ui.pfErr ? '<div class="banner warn" role="alert">' + esc(S.ui.pfErr) + "</div>" : "") +
+    '<div class="fields"><label class="field"><span>Nome nas chaves *</span><input type="text" id="pf-name" data-pf="name" maxlength="40" autocomplete="nickname" value="' + esc(f.name) + '"></label>' +
+    '<label class="field"><span>Deck / arquétipo *</span><input type="text" id="pf-arch" data-pf="arch" list="dl-arch" maxlength="60" placeholder="Ex: Mega Lopunny / Pidgeot" value="' + esc(f.arch) + '"></label></div>' +
+    '<datalist id="dl-arch">' + allArchetypes().map(function (a) { return '<option value="' + esc(a) + '">'; }).join("") + "</datalist>" + dexDatalist() +
+    '<div class="fields"><label class="field"><span>Pokémon principal</span><input type="text" id="pf-i0" data-pf="icon0" list="dl-icons" maxlength="30" value="' + esc(f.icon0) + '"></label><label class="field"><span>Pokémon de apoio</span><input type="text" id="pf-i1" data-pf="icon1" list="dl-icons" maxlength="30" value="' + esc(f.icon1) + '"></label></div>' +
+    '<div class="row"><button class="btn sm" data-a="pf-detect">' + ic("sparkles", "sm") + "Detectar pelo nome do deck</button></div>" +
+    typePicker(f.deckType, guessType({ deckArchetype: f.arch, deckIcons: [f.icon0, f.icon1].filter(Boolean) })).replace(/data-a="p-type"/g, 'data-a="pf-type"') +
+    '<div class="field"><span>Decklist</span>' + dz + "</div>" +
+    '<label class="field"><span>Observações (opcional)</span><textarea id="pf-notes" data-pf="notes" rows="2" maxlength="300">' + esc(f.notes) + "</textarea></label>" +
+    '<div class="row"><button class="btn honey" data-a="pf-save"' + (S.ui.pfBusy ? " disabled" : "") + ">" + ic("check", "sm") + (S.ui.pfBusy ? "Salvando..." : "Salvar cadastro") + "</button>" + (S.ui.pfSaved ? '<span class="small" style="color:var(--win);font-weight:800">' + ic("check", "sm") + " Salvo</span>" : "") + "</div></section>";
+
+  /* torneio atual */
+  var me = myTournamentPlayer(), su = mySignup(), t = S.t, sl = slotsInfo(), tour;
+  if (me) {
+    var cur = null;
+    rounds().forEach(function (r) { if (r.roundNumber === t.currentRound) r.matches.forEach(function (m) { if (m.player1Id === me.id || m.player2Id === me.id) cur = m; }); });
+    var row = rowsNow().filter(function (r) { return r.player.id === me.id; })[0];
+    tour = '<span class="pill win">' + ic("check", "sm") + "Você está inscrito</span>" +
+      (cur ? '<div class="li"><span class="pill mono">Mesa ' + cur.tableNumber + '</span><div class="grow"><b>Rodada ' + t.currentRound + "</b>" + (cur.isBye ? " · BYE (vitória automática)" : " · contra <strong>" + esc(pname(cur.player1Id === me.id ? cur.player2Id : cur.player1Id)) + "</strong>") + '</div><span class="small muted">' + esc(HL.resultLabel(cur, pname)) + '</span></div><button class="btn sm" data-a="page" data-p="tournament">Ver mesas</button>' : t.status === "registration" ? '<p class="small muted">As chaves aparecem aqui quando a Rodada 1 começar.</p>' : "") +
+      (row && t.rounds.length ? '<p class="small">Sua campanha: <strong>' + row.points + " pts</strong> (" + row.wins + "V " + row.draws + "E " + row.losses + "D) · " + row.rank + "º lugar</p>" : "") +
+      '<p class="small">Decklist no torneio: ' + (deckOf(me.id) ? '<span class="pill win">enviada</span>' : '<span class="pill honey">pendente</span>') + "</p>";
+  } else if (su && su.status === "pending") {
+    tour = '<span class="pill honey">' + ic("clock", "sm") + "Inscrição aguardando aprovação</span><p class=\"small muted\">Enviada em " + new Date(su.at || Date.now()).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) + '.</p><div><button class="btn sm danger" data-a="pf-cancel">Cancelar inscrição</button></div>';
+  } else if (started()) {
+    tour = '<p class="small muted">O torneio já começou. Acompanhe pelas páginas Torneio e Classificação.</p>';
+  } else if (!S.settings.regOpen) {
+    tour = '<p class="small muted">As inscrições estão fechadas. Quando o organizador abrir, o botão aparece aqui.</p>' + (su && su.status === "rejected" ? '<p class="small" style="color:var(--loss)">Seu último pedido não foi aprovado.</p>' : "");
+  } else {
+    tour = '<p class="small">' + (sl.free ? "<strong>" + sl.free + "</strong> de " + sl.max + " vagas livres." : "Vagas esgotadas: você entra na lista de espera.") + "</p>" +
+      (profileComplete(pr) ? '<div><button class="btn honey" data-a="pf-join">' + ic("userplus", "sm") + (sl.free ? "Inscrever-me com meu cadastro" : "Entrar na lista de espera") + "</button></div>" : '<p class="small muted">Preencha e salve seu nome e deck acima para se inscrever.</p>') +
+      (su && su.status === "rejected" ? '<p class="small" style="color:var(--loss)">Seu último pedido não foi aprovado. Você pode tentar de novo.</p>' : "");
+  }
+  var tourCard = '<section class="card pad stack"><div class="sec-title"><span class="ico">' + ic("trophy") + '</span><div><h3>Torneio atual</h3><p class="small muted">' + esc(t.title) + "</p></div></div>" + tour + "</section>";
+
+  /* histórico do jogador */
+  var mine = [];
+  historyList().forEach(function (h) {
+    (h.standings || []).forEach(function (st) { if (st.player && (st.player.id === S.player.uid || st.player.uid === S.player.uid || (pr.name && lc(st.player.name) === lc(pr.name)))) mine.push({ h: h, st: st }); });
+  });
+  var histCard = '<section class="card pad stack"><div class="sec-title"><span class="ico">' + ic("history") + '</span><div><h3>Minhas edições</h3><p class="small muted">Torneios arquivados em que você jogou</p></div></div>' +
+    (mine.length ? '<div class="list">' + mine.map(function (x) { return '<div class="li"><span class="medal ' + (x.st.rank <= 3 ? "g" + x.st.rank : "") + '">' + x.st.rank + 'º</span><div class="grow"><b>' + esc(x.h.title) + '</b><div class="tiny muted">' + esc(x.h.date) + " · " + esc(HL.archOf(x.st.player)) + '</div></div><span class="pill mono">' + x.st.points + " pts · " + x.st.wins + "V " + x.st.draws + "E " + x.st.losses + "D</span></div>"; }).join("") + "</div>" : '<p class="small muted">Nenhuma edição ainda. Elas aparecem aqui depois que o organizador arquivar um torneio em que você jogou.</p>') + "</section>";
+  return head + '<div class="two"><div class="stack">' + form + "</div><div class=\"stack\">" + tourCard + histCard + "</div></div>";
+}
+function deckLocked() { return started(); }
+
+/* ----- barra superior: Entrar / Meu perfil ----- */
+var _vNav = vNav;
+vNav = function () {
+  var html = _vNav();
+  if (!accountsOn() || isAdmin()) return html;
+  var btn = S.player
+    ? '<button class="chip-btn" data-a="page" data-p="perfil" title="Meu perfil"' + (S.page === "perfil" ? ' aria-current="page" style="background:var(--honey);color:var(--on-honey);border-color:var(--honey)"' : "") + ">" + ic("users") + '<span class="hide-sm">' + esc((myProfile() && myProfile().name) || S.player.username) + "</span></button>"
+    : '<button class="chip-btn" data-a="acc-open" data-tab="login" title="Entrar ou criar conta">' + ic("users") + '<span class="hide-sm">Entrar</span></button>';
+  return html.replace(/<button class="chip-btn" data-a="login-open"[^>]*>[\s\S]*?<\/button>/, btn);
+};
+
+/* ----- modal de conta: entrar / criar ----- */
+MODALS.account = function (m) {
+  var f = m.f, tab = m.tab || "login", su = tab === "signup";
+  var body = '<div class="seg" role="tablist"><button data-a="acc-tab" data-v="login" aria-pressed="' + !su + '">Entrar</button><button data-a="acc-tab" data-v="signup" aria-pressed="' + su + '">Criar conta</button></div>' +
+    (f.err ? '<div class="banner warn" role="alert">' + esc(f.err) + "</div>" : "") +
+    '<label class="field"><span>Usuário *</span><input type="text" id="acc-user" data-m="user" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="20" value="' + esc(f.user || "") + '"></label>' +
+    (su ? '<p class="tiny muted" style="margin-top:-8px">3 a 20 caracteres: letras minúsculas, números, ponto, hífen ou sublinhado. Ex: rapha.tcg</p>' : "") +
+    '<div class="field"><label for="acc-pass" style="font-size:.72rem;font-weight:800;letter-spacing:.03em;color:var(--muted);text-transform:uppercase">Senha *</label><div class="pw"><input type="password" id="acc-pass" data-m="pass" autocomplete="' + (su ? "new-password" : "current-password") + '" maxlength="80" value="' + esc(f.pass || "") + '"><button type="button" data-a="pw-toggle" data-for="acc-pass" aria-label="Mostrar senha" aria-pressed="false">' + ic("eye", "sm") + "</button></div></div>" +
+    (su ? '<div class="field"><label for="acc-pass2" style="font-size:.72rem;font-weight:800;letter-spacing:.03em;color:var(--muted);text-transform:uppercase">Repita a senha *</label><div class="pw"><input type="password" id="acc-pass2" data-m="pass2" autocomplete="new-password" maxlength="80" value="' + esc(f.pass2 || "") + '"><button type="button" data-a="pw-toggle" data-for="acc-pass2" aria-label="Mostrar senha" aria-pressed="false">' + ic("eye", "sm") + "</button></div></div>" +
+      '<label class="field"><span>Nome nas chaves *</span><input type="text" id="acc-name" data-m="name" autocomplete="nickname" maxlength="40" placeholder="Como você quer aparecer no torneio" value="' + esc(f.name || "") + '"></label>' +
+      '<p class="tiny muted">Guarde bem sua senha: não há recuperação por e-mail. Se esquecer, peça ao organizador para apagar a conta e crie outra.</p>' : "");
+  return shell("narrow", su ? "Criar conta de jogador" : "Entrar", su ? "Seu perfil guarda deck, decklist e inscrições" : "Jogadores e organizador entram por aqui", body,
+    '<button class="btn" data-a="close">Cancelar</button><button class="btn honey" data-a="acc-submit"' + (m.busy ? " disabled" : "") + ">" + ic(su ? "userplus" : "lock", "sm") + (m.busy ? (su ? "Criando..." : "Entrando...") : su ? "Criar conta" : "Entrar") + "</button>", ic(su ? "userplus" : "lock"));
+};
+MODALS.accpass = function (m) {
+  var f = m.f;
+  var pw = function (id, key, lab, ac) { return '<div class="field"><label for="' + id + '" style="font-size:.72rem;font-weight:800;letter-spacing:.03em;color:var(--muted);text-transform:uppercase">' + lab + '</label><div class="pw"><input type="password" id="' + id + '" data-m="' + key + '" autocomplete="' + ac + '" maxlength="80" value="' + esc(f[key] || "") + '"><button type="button" data-a="pw-toggle" data-for="' + id + '" aria-label="Mostrar senha" aria-pressed="false">' + ic("eye", "sm") + "</button></div></div>"; };
+  return shell("narrow", "Trocar senha", "Usuário: " + esc(S.player ? S.player.username : ""),
+    (f.err ? '<div class="banner warn" role="alert">' + esc(f.err) + "</div>" : "") + pw("ap-cur", "cur", "Senha atual", "current-password") + pw("ap-new", "pass", "Nova senha (mínimo 8)", "new-password") + pw("ap-new2", "pass2", "Repita a nova senha", "new-password"),
+    '<button class="btn" data-a="close">Cancelar</button><button class="btn honey" data-a="acc-pass-save"' + (m.busy ? " disabled" : "") + ">" + ic("check", "sm") + "Salvar</button>", ic("lock"));
+};
+function authMsg(e) {
+  var c = (e && e.code) || "";
+  if (/email-already-in-use/.test(c)) return "Esse usuário já existe. Escolha outro ou entre com ele.";
+  if (/weak-password/.test(c)) return "Senha fraca. Use pelo menos 8 caracteres.";
+  if (/too-many/.test(c)) return "Muitas tentativas. Aguarde alguns minutos e tente de novo.";
+  if (/network/.test(c)) return "Sem conexão com o servidor. Verifique a internet.";
+  if (/operation-not-allowed|admin-restricted/.test(c)) return "A criação de contas está desativada no Firebase. Avise o organizador.";
+  if (/invalid-credential|wrong-password|user-not-found|invalid-email/.test(c)) return "Usuário ou senha incorretos.";
+  return "Não foi possível concluir (" + (c || (e && e.message) || "erro") + ").";
+}
+Object.assign(A, {
+  "acc-open": function (d) { openModal({ type: "account", tab: d.tab || "login", f: {} }); },
+  "acc-tab": function (d) { var m = topModal(); m.tab = d.v; m.f.err = null; renderModals(); },
+  "acc-submit": async function () {
+    var m = topModal(), f = m.f, u = cleanUser(f.user), su = m.tab === "signup";
+    if (!u || !f.pass) { f.err = "Informe usuário e senha."; return renderModals(); }
+    if (su) {
+      if (!validUser(u) || u === "admin") { f.err = "Usuário inválido. Use 3 a 20 caracteres: letras minúsculas, números, ponto, hífen ou sublinhado."; return renderModals(); }
+      if (String(f.pass).length < 8) { f.err = "A senha precisa ter pelo menos 8 caracteres."; return renderModals(); }
+      if (f.pass !== f.pass2) { f.err = "As duas senhas não são iguais."; return renderModals(); }
+      if (!String(f.name || "").trim()) { f.err = "Informe o nome que vai aparecer nas chaves."; return renderModals(); }
+    }
+    m.busy = true; f.err = null; renderModals();
+    try {
+      if (su) {
+        var cred = await FB.auth.createUserWithEmailAndPassword(playerEmail(u), f.pass);
+        var name = String(f.name).trim().slice(0, 40);
+        await FB.fs.doc("profiles/" + cred.user.uid).set({ username: u, name: name, deckArchetype: "", deckIcons: [], deckType: "", notes: "", decklist: null, decklistAt: null, createdAt: Date.now(), updatedAt: Date.now() });
+        S.ui.pf = null; S.modals = []; goPage("perfil", true); toast("Conta criada! Complete seu deck e anexe a decklist.");
+      } else {
+        await FB.auth.signInWithEmailAndPassword(loginEmail(u), f.pass);
+        S.ui.pf = null; S.modals = [];
+        if (u === "admin") { render(); toast("Bem-vindo, organizador! Modo administrador ativo."); } else { goPage("perfil", true); toast("Bem-vindo de volta!"); }
+      }
+    } catch (e) { m.busy = false; f.err = authMsg(e); if (!su) f.pass = ""; renderModals(); }
+  },
+  "acc-logout": function () { FB.auth.signOut().then(function () { S.ui.pf = null; goPage("tournament", true); toast("Você saiu da sua conta."); }); },
+  "acc-pass": function () { openModal({ type: "accpass", f: {} }); },
+  "acc-pass-save": async function () {
+    var m = topModal(), f = m.f, u = FB.auth.currentUser;
+    if (String(f.pass || "").length < 8) { f.err = "A nova senha precisa ter pelo menos 8 caracteres."; return renderModals(); }
+    if (f.pass !== f.pass2) { f.err = "As duas senhas não são iguais."; return renderModals(); }
+    m.busy = true; renderModals();
+    try {
+      await u.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(u.email, f.cur || ""));
+      await u.updatePassword(f.pass); closeModal(); toast("Senha alterada.");
+    } catch (e) { m.busy = false; f.err = /invalid-credential|wrong-password/.test(e.code) ? "A senha atual está incorreta." : authMsg(e); renderModals(); }
+  },
+  "pf-detect": function () { var f = S.ui.pf, d = detectIcons(f.arch || ""); if (!d.length) return toast("Não reconheci nenhum Pokémon no nome do deck."); f.icon0 = d[0] || ""; f.icon1 = d[1] || ""; render(); toast("Detectado: " + d.join(" / ")); },
+  "pf-type": function (d) { S.ui.pf.deckType = d.v || ""; render(); },
+  "pf-zoom": function () { var pr = myProfile(); if (pr) openModal({ type: "deck", virtual: { id: "me", name: pr.name, deckArchetype: pr.deckArchetype, deckName: pr.deckArchetype, deckIcons: pr.deckIcons, deckType: pr.deckType, decklist: pr.decklist, notes: pr.notes } }); },
+  "pf-save": async function () {
+    var f = S.ui.pf, name = String(f.name || "").trim(), arch = String(f.arch || "").trim();
+    S.ui.pfErr = !name ? "Informe o nome que vai aparecer nas chaves." : !arch ? "Informe o deck ou arquétipo." : null;
+    if (S.ui.pfErr) return render();
+    var icons = [f.icon0, f.icon1].map(function (x) { return String(x || "").trim(); }).filter(Boolean); if (!icons.length) icons = detectIcons(arch);
+    var pr = Object.assign({}, myProfile() || { username: S.player.username, createdAt: Date.now() }, { name: name.slice(0, 40), deckArchetype: arch.slice(0, 60), deckIcons: icons.slice(0, 2), deckType: f.deckType || guessType({ deckArchetype: arch, deckIcons: icons }) || "", notes: String(f.notes || "").trim().slice(0, 300), updatedAt: Date.now() });
+    S.ui.pfBusy = true; render();
+    try {
+      await FB.fs.doc("profiles/" + S.player.uid).set(fbClean(pr));
+      S.ui.pfBusy = false; S.ui.pfSaved = true; S.ui.pfErr = null; render(); toast("Cadastro salvo.");
+      setTimeout(function () { S.ui.pfSaved = false; scheduleRender(); }, 3000);
+    } catch (e) { S.ui.pfBusy = false; S.ui.pfErr = "Não foi possível salvar (" + (e.code || e.message) + ")."; render(); }
+  },
+  "pf-join": async function () {
+    var pr = myProfile(); if (!profileComplete(pr)) return toast("Salve seu nome e deck antes de se inscrever.");
+    if (started() || !S.settings.regOpen) return toast("As inscrições não estão abertas.");
+    try {
+      await FB.fs.doc("signups/" + S.player.uid).set({ uid: S.player.uid, name: pr.name, deckArchetype: pr.deckArchetype, deckIcons: pr.deckIcons || [], deckType: pr.deckType || "", notes: pr.notes || "", decklist: pr.decklist || null, status: "pending", at: Date.now() });
+      render(); toast("Inscrição enviada! Aguarde a aprovação do organizador.");
+    } catch (e) { toast("Não foi possível enviar a inscrição (" + (e.code || e.message) + ")."); }
+  },
+  "pf-cancel": function () {
+    confirmBox({ title: "Cancelar sua inscrição?", body: "<p>Seu pedido sai da lista do organizador. Você pode se inscrever de novo enquanto as inscrições estiverem abertas.</p>", ok: "Cancelar inscrição", cancel: "Manter", danger: true, icon: "userx",
+      onOk: function () { FB.fs.doc("signups/" + S.player.uid).delete().then(function () { render(); toast("Inscrição cancelada."); }, function (e) { toast("Não foi possível cancelar (" + e.code + ")."); }); } });
+  }
+});
+/* atalho público: o botão "Quero me inscrever" leva ao perfil */
+var _signupOpen = A["signup-open"];
+A["signup-open"] = function () {
+  if (!accountsOn()) return _signupOpen();
+  if (started()) return toast("O torneio já começou: as inscrições estão encerradas.");
+  if (!S.player) { openModal({ type: "account", tab: "signup", f: {} }); toast("Crie sua conta (ou entre) para se inscrever."); return; }
+  goPage("perfil", true);
+};
+var _vSignupPublic = vSignupPublic;
+vSignupPublic = function () {
+  if (!accountsOn()) return _vSignupPublic();
+  if (started() || !S.settings.regOpen) return "";
+  var sl = slotsInfo(), su = mySignup(), me = myTournamentPlayer();
+  var state = me ? '<span class="pill win">Você está inscrito</span>' : su && su.status === "pending" ? '<span class="pill honey">Sua inscrição aguarda aprovação</span>' : "";
+  return '<div class="card pad stack" style="border-color:var(--honey)"><div class="row between"><div><span class="eyebrow">' + ic("userplus", "sm") + 'Inscrições abertas</span><h3 style="font-size:1.05rem;margin-top:4px">' + (sl.free ? sl.free + " de " + sl.max + " vagas livres" : "Vagas esgotadas · lista de espera") + '</h3><p class="small muted">Inscreva-se pelo seu perfil de jogador, com seu deck e decklist já salvos.</p></div>' +
+    (state || '<button class="btn honey" data-a="signup-open">' + ic("userplus", "sm") + (S.player ? "Ir para meu perfil" : "Criar conta e me inscrever") + "</button>") + "</div></div>";
+};
+
+/* decklist do perfil: foto reduzida e salva; também vale para o torneio enquanto não começou */
+var _handleFiles = handleFiles;
+handleFiles = async function (kind, files) {
+  if (kind !== "pfdeck") return _handleFiles(kind, files);
+  var file = files && files[0]; if (!file || !S.player) return;
+  if (deckLocked()) return toast("O torneio já começou: só o organizador altera decklists.");
+  S.ui.pfBusy = true; render(); toast("Enviando decklist...");
+  try {
+    var ref = await storeImage(file, 1400), now = Date.now();
+    var pr = Object.assign({}, myProfile() || { username: S.player.username, name: S.player.username, deckArchetype: "", deckIcons: [], deckType: "", notes: "", createdAt: now }, { decklist: ref, decklistAt: now, updatedAt: now });
+    await FB.fs.doc("profiles/" + S.player.uid).set(fbClean(pr));
+    if (myTournamentPlayer()) await FB.fs.doc("decklists/" + S.player.uid).set({ img: ref.img, at: now, by: "jogador" });
+    var su = mySignup(); if (su && su.status === "pending") await FB.fs.doc("signups/" + S.player.uid).set(Object.assign({}, su, { decklist: ref }));
+    S.ui.pfBusy = false; render(); toast("Decklist salva no seu perfil.");
+  } catch (e) { S.ui.pfBusy = false; render(); toast(e.message || ("Falha ao enviar (" + (e.code || "erro") + ").")); }
+};
+document.addEventListener("input", function (e) { var k = e.target.dataset && e.target.dataset.pf; if (k && S.ui.pf) { S.ui.pf[k] = e.target.value; S.ui.pfSaved = false; } });
+
+/* aprovação: o jogador entra com o próprio id de conta, ligando perfil, decklist e torneio */
+var _approveBase = A["signup-approve"];
+A["signup-approve"] = function (d) {
+  var s = S.signups[d.id]; if (!s) return;
+  if (started()) return toast("O torneio já começou. Use Inscrever Treinador para uma entrada tardia.");
+  if (!s.uid) return _approveBase(d);
+  if (S.t.players.some(function (p) { return p.id === s.uid || p.uid === s.uid; })) { Store.put("signups", d.id, Object.assign({}, s, { status: "approved" })); return toast(s.name + " já está inscrito."); }
+  var reg = regFor({ id: s.uid, name: s.name });
+  var p = { id: s.uid, uid: s.uid, name: s.name, deckName: s.deckArchetype, deckArchetype: s.deckArchetype, deckIcons: s.deckIcons || [], deckImages: reg ? reg.deckImages || [] : [], deckType: s.deckType || "", notes: s.notes || "", active: true, createdAt: Date.now() };
+  if (!commitT(function (t) { t.players.push(p); recRounds(t); }, s.name + " aprovado(a) e inscrito(a).")) return;
+  var dl = s.decklist || (S.profiles[s.uid] && S.profiles[s.uid].decklist);
+  if (dl) Store.put("decks", s.uid, Object.assign({ at: Date.now(), by: "jogador" }, dl));
+  upsertTrainer(p, dl || undefined);
+  Store.put("signups", d.id, Object.assign({}, s, { status: "approved", playerId: s.uid }));
+};
+
+/* organizador: ligar um treinador antigo a uma conta de jogador */
+var _playerModal = MODALS.player;
+MODALS.player = function (m) {
+  var html = _playerModal(m);
+  if (!accountsOn() || !isAdmin() || !m.id || m.regOnly) return html;
+  var p = player(m.id), cur = m.f.uid != null ? m.f.uid : (p && p.uid) || "";
+  var opts = values(S.profiles).map(function (pr, i) { return pr; });
+  var ids = Object.keys(S.profiles);
+  var sel = '<label class="field"><span>Conta do jogador (opcional)</span><select id="m-uid" data-m="uid"><option value="">Sem conta vinculada</option>' +
+    ids.map(function (id) { var pr = S.profiles[id]; return '<option value="' + esc(id) + '"' + (id === cur ? " selected" : "") + ">" + esc((pr.name || pr.username) + " (@" + pr.username + ")") + "</option>"; }).join("") +
+    '</select></label><p class="tiny muted" style="margin-top:-8px">Com a conta vinculada, o jogador vê este torneio no perfil e pode atualizar a decklist até a Rodada 1.</p>';
+  return html.replace('<label class="field"><span>Observações do Jogador', sel + '<label class="field"><span>Observações do Jogador');
+};
+var _savePlayer = savePlayer;
+savePlayer = function () {
+  var m = topModal(), uidSel = m && m.f ? m.f.uid : undefined, pid = m && m.id;
+  _savePlayer();
+  if (uidSel === undefined || !pid || !isAdmin()) return;
+  commitT(function (t) { t.players.forEach(function (p) { if (p.id === pid) { if (uidSel) p.uid = uidSel; else delete p.uid; } }); });
+};
+A["p-save"] = savePlayer;
+
+/* sessão: separa organizador de jogador */
+function onAuth(u) {
+  S.authed = !!(u && u.email === ADMIN_EMAIL);
+  S.player = u && u.email !== ADMIN_EMAIL ? { uid: u.uid, username: String(u.email || "").split("@")[0] } : null;
+  if (!S.player && S.page === "perfil" && u) S.page = "tournament";
+  S.ui.pf = null; scheduleRender();
+}
+
+/* decklist no modal: jogador com conta anexa pelo próprio perfil; visitante sem conta não anexa */
+var _deckModal = MODALS.deck;
+MODALS.deck = function (m) {
+  var html = _deckModal(m);
+  if (!accountsOn() || isAdmin() || m.virtual) return html;
+  var p = player(m.id), own = p && S.player && (p.id === S.player.uid || p.uid === S.player.uid);
+  html = html.replace(/<button class="btn( sm)? honey" data-a="pick" data-kind="deck"[^>]*>[\s\S]*?<\/button>/g, "");
+  if (own && !started()) html = html.replace('<div class="mbody">', '<div class="mbody"><div class="banner info row between"><span>Esta é a sua inscrição. Atualize a decklist pelo seu perfil.</span><button class="btn sm honey" data-a="pf-goto">Abrir meu perfil</button></div>');
+  return html;
+};
+A["pf-goto"] = function () { S.modals = []; goPage("perfil", true); };
 
 /* início */
 applyTheme();
