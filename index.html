@@ -2853,7 +2853,7 @@ async function connectFirebase() {
     gotT = true; scheduleRender();
   }, function (e) { toast("Sem acesso aos dados do torneio (" + e.code + "). Confira as regras do Firestore."); });
   S.db.doc("hl/settings").onSnapshot(function (snap) { if (snap.exists) { S.settings = Object.assign({ customArchetypes: [], waPhone: "", publicUrl: location.href.split("#")[0], regOpen: false, maxSlots: 12, prizeTemplate: [] }, clone(snap.data())); cacheLocal("settings"); scheduleRender(); } }, function () { });
-  ["trainers", "history", "decks", "reports", "schedules", "signups"].concat(COLL.profiles ? ["profiles"] : []).forEach(function (k) {
+  ["trainers", "history", "decks", "reports", "schedules", "signups"].concat(COLL.profiles ? ["profiles", "drops"] : []).forEach(function (k) {
     S.db.collection(COLL[k]).onSnapshot(function (qs) {
       var m = {}; qs.docs.forEach(function (d) { m[d.id] = clone(d.data()); });
       S[k] = m; cacheLocal(k); scheduleRender();
@@ -3155,6 +3155,123 @@ MODALS.deck = function (m) {
   return html;
 };
 A["pf-goto"] = function () { S.modals = []; goPage("perfil", true); };
+
+/* ===== Inscrição direta e drop pelo próprio jogador ===== */
+S.drops = {}; COLL.drops = "drops"; LOCAL.drops = "hl2.drops";
+function autoOn() { return S.settings.regAuto !== false; }
+function dropFor(p) { return p ? S.drops[p.uid || p.id] || (p.uid && S.drops[p.id]) || null : null; }
+/* junta ao torneio as inscrições feitas pelo perfil (até o limite de vagas) e aplica os drops pedidos pelos jogadores */
+function mergeEntries(t) {
+  if (!accountsOn()) return t;
+  var st = t.status !== "registration" || t.currentRound > 0, changed = false;
+  var players = t.players.filter(function (p) {
+    if (!st && dropFor(p)) { changed = true; return false; }
+    return true;
+  }).map(function (p) {
+    if (st && p.active !== false && dropFor(p)) { changed = true; return Object.assign({}, p, { active: false, dropRound: dropFor(p).round || t.currentRound, selfDrop: true }); }
+    return p;
+  });
+  if (!st && autoOn()) {
+    var max = +S.settings.maxSlots || 12, have = {};
+    players.forEach(function (p) { have[p.id] = 1; if (p.uid) have[p.uid] = 1; });
+    values(S.signups).filter(function (s) { return s.uid && s.status === "pending" && !have[s.uid] && !S.drops[s.uid]; })
+      .sort(function (a, b) { return (a.at || 0) - (b.at || 0); })
+      .forEach(function (s) {
+        if (players.length >= max) return;
+        players.push({ id: s.uid, uid: s.uid, name: s.name, deckName: s.deckArchetype, deckArchetype: s.deckArchetype, deckIcons: s.deckIcons || [], deckImages: [], deckType: s.deckType || "", notes: s.notes || "", active: true, createdAt: s.at || Date.now(), viaProfile: true });
+        if (s.decklist && !S.decks[s.uid]) S.decks[s.uid] = Object.assign({ at: s.at, by: "jogador" }, s.decklist);
+        changed = true;
+      });
+  }
+  if (!changed) return t;
+  var out = Object.assign({}, t, { players: players });
+  if (!st) out.totalRounds = HL.recommendedRounds(players.length);
+  return out;
+}
+var _renderBase = render;
+render = function () { S.t = mergeEntries(S.t); return _renderBase(); };
+function waitlistPos() {
+  if (!S.player) return 0;
+  var list = values(S.signups).filter(function (s) { return s.uid && s.status === "pending" && !S.t.players.some(function (p) { return p.id === s.uid || p.uid === s.uid; }); }).sort(function (a, b) { return (a.at || 0) - (b.at || 0); });
+  for (var i = 0; i < list.length; i++) if (list[i].uid === S.player.uid) return i + 1;
+  return 0;
+}
+
+/* perfil: cartão do torneio com inscrição direta, cancelamento e drop */
+var _vProfile = vProfile;
+vProfile = function () {
+  var html = _vProfile();
+  if (!S.player) return html;
+  var me = myTournamentPlayer(), su = mySignup(), t = S.t, block = null, st = started();
+  if (me && !st) block = '<div class="row between"><span class="tiny muted">' + (me.viaProfile ? "Inscrição feita pelo seu perfil." : "Inscrição registrada pelo organizador.") + '</span><button class="btn sm danger" data-a="pf-leave">' + ic("userx", "sm") + "Cancelar inscrição</button></div>";
+  else if (me && st && me.active !== false) block = '<div class="row between"><span class="tiny muted">Precisa sair do torneio? O drop vale a partir da próxima rodada.</span><button class="btn sm danger" data-a="pf-drop">' + ic("userx", "sm") + "Dar drop</button></div>";
+  else if (me && st && me.active === false) block = '<span class="pill loss">' + ic("userx", "sm") + "Você deu drop" + (me.dropRound ? " na rodada " + me.dropRound : "") + "</span><p class=\"tiny muted\">Para voltar ao torneio, fale com o organizador.</p>";
+  else if (!me && su && su.status === "pending" && autoOn() && !st) block = '<span class="pill honey">' + ic("clock", "sm") + "Lista de espera · posição " + waitlistPos() + '</span><p class="tiny muted">Se alguém sair, você entra automaticamente na ordem da fila.</p><div><button class="btn sm danger" data-a="pf-cancel">Sair da lista de espera</button></div>';
+  if (!block) return html;
+  return html.replace(/(<section class="card pad stack"><div class="sec-title"><span class="ico"><svg[^]*?<\/svg><\/span><div><h3>Torneio atual<\/h3>[^]*?)(<\/section>)/, function (all, a, b) {
+    if (!me && su && su.status === "pending" && autoOn()) a = a.replace(/<span class="pill honey"><svg[^]*?Inscrição aguardando aprovação<\/span>[^]*?(<div><button class="btn sm danger" data-a="pf-cancel">Cancelar inscrição<\/button><\/div>)/, "");
+    return a + block + b;
+  });
+};
+Object.assign(A, {
+  "pf-leave": function () {
+    confirmBox({ title: "Cancelar sua inscrição?", body: "<p>Você sai da lista de inscritos e libera a vaga. Enquanto as inscrições estiverem abertas, dá para se inscrever de novo.</p>", ok: "Cancelar inscrição", cancel: "Manter", danger: true, icon: "userx",
+      onOk: async function () {
+        try {
+          var me = myTournamentPlayer(), su = mySignup();
+          if (su) await FB.fs.doc("signups/" + S.player.uid).delete();
+          if (me && !me.viaProfile) await FB.fs.doc("drops/" + S.player.uid).set({ at: Date.now(), round: 0 });
+          S.t = Object.assign({}, S.t, { players: S.t.players.filter(function (p) { return p.id !== S.player.uid && p.uid !== S.player.uid; }) });
+          render(); toast("Inscrição cancelada.");
+        } catch (e) { toast("Não foi possível cancelar (" + (e.code || e.message) + ")."); }
+      } });
+  },
+  "pf-drop": function () {
+    confirmBox({ title: "Dar drop no torneio?", body: "<p>Você não recebe novas partidas a partir da próxima rodada. Sua pontuação até aqui continua na classificação.</p><p class=\"small muted\">A partida da rodada atual, se ainda não foi jogada, continua valendo. Combine com o adversário ou avise o organizador.</p>", ok: "Dar drop", cancel: "Continuar no torneio", danger: true, icon: "userx",
+      onOk: async function () {
+        try { await FB.fs.doc("drops/" + S.player.uid).set({ at: Date.now(), round: S.t.currentRound }); render(); toast("Drop registrado. Boa sorte nas próximas!"); }
+        catch (e) { toast("Não foi possível registrar o drop (" + (e.code || e.message) + ")."); }
+      } });
+  }
+});
+/* inscrição direta: o botão já confirma a vaga */
+var _pfJoin = A["pf-join"];
+A["pf-join"] = async function () {
+  if (S.drops[S.player && S.player.uid]) { try { await FB.fs.doc("drops/" + S.player.uid).delete(); } catch (e) { } }
+  await _pfJoin();
+  if (autoOn()) { render(); toast(myTournamentPlayer() ? "Inscrição confirmada! Você está no torneio." : "Vagas esgotadas: você entrou na lista de espera."); }
+};
+/* reativar pelo organizador também apaga o pedido de drop do jogador */
+var _dropToggle = A.drop;
+A.drop = function (d) {
+  var p = player(d.id), dr = p && dropFor(p);
+  if (dr && p.active === false && isAdmin()) { Store.del("drops", p.uid || p.id); if (p.uid && S.drops[p.id]) Store.del("drops", p.id); }
+  return _dropToggle(d);
+};
+/* painel do organizador: com inscrição direta, a lista de pedidos é só a lista de espera */
+var _vSignupsAdmin = vSignupsAdmin;
+vSignupsAdmin = function () {
+  var html = _vSignupsAdmin();
+  if (!accountsOn() || !autoOn()) return html;
+  html = html.replace('<b>Inscrição pelo link</b>', '<b>Inscrição pelo perfil</b><span class="pill tie">Automática</span>');
+  return html.replace(/<span class="pill honey">Dentro das vagas<\/span>/g, '<span class="pill honey">Aguardando vaga</span>');
+};
+var _settingsModal3 = MODALS.settings;
+MODALS.settings = function (m) {
+  var html = _settingsModal3(m);
+  if (!accountsOn()) return html;
+  return html.replace(/(<label class="row small" style="gap:8px"><input type="checkbox" id="s-regopen"[^>]*> Inscrições abertas para os jogadores<\/label>)/,
+    '$1<label class="row small" style="gap:8px"><input type="checkbox" id="s-regauto" data-m="regAuto"' + (m.f.regAuto !== false ? " checked" : "") + "> Inscrição automática (sem aprovação) até lotar as vagas</label>");
+};
+var _settingsSave = A["settings-save"];
+A["settings-save"] = function () {
+  var m = topModal(), auto = m && m.f ? m.f.regAuto : undefined;
+  _settingsSave();
+  if (auto !== undefined) Store.saveSettings(Object.assign({}, S.settings, { regAuto: auto !== false }));
+};
+var _settingsOpen = A.settings;
+A.settings = function () { _settingsOpen(); var m = topModal(); if (m && m.type === "settings") m.f.regAuto = S.settings.regAuto !== false; renderModals(); };
+PAGE_VIEWS.perfil = vProfile;
 
 /* início */
 applyTheme();

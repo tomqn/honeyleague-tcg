@@ -67,7 +67,17 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // Inscrição pelo perfil: um pedido por conta (o id do pedido é o id da conta). O organizador aprova.
+    // Drop pedido pelo próprio jogador (vale a partir da próxima rodada). Antes do torneio, o jogador pode desfazer.
+    match /drops/{uid} {
+      allow read: if true;
+      allow create: if isAdmin() || (isPlayer(uid) && request.resource.data.keys().hasOnly(['at', 'round'])
+        && request.resource.data.round is int);
+      allow delete: if isAdmin() || (isPlayer(uid) && registrationOpen());
+      allow update: if isAdmin();
+    }
+
+    // Inscrição pelo perfil: um pedido por conta (o id do pedido é o id da conta). Entra direto até lotar as vagas,
+    // ou espera aprovação se o organizador desligar a inscrição automática.
     match /signups/{id} {
       allow read: if true;
       allow create, update: if isAdmin() || (isPlayer(id) && registrationOpen()
