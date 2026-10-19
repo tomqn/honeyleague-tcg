@@ -400,6 +400,14 @@ main:focus{outline:none}
 input[type=password]{width:100%;min-width:0;background:var(--bg);border:1.5px solid var(--line);border-radius:12px;padding:9px 12px;font-size:.88rem}
 input[type=password]:focus,input[type=datetime-local]:focus{outline:none;border-color:var(--honey)}
 @media (prefers-reduced-motion:reduce){.overlay,.overlay .modal,.toast{animation:none!important}.btn:active,.res:active{transform:none}}
+/* tutorial */
+.help-steps{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.help-steps>li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:start}
+.help-num{width:40px;height:40px;border-radius:12px;background:var(--honey);color:var(--on-honey);display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:1.2rem}
+.help-steps ul{margin:0;padding-left:18px;display:grid;gap:6px}
+.help-steps p,.help-steps li li{font-size:.9rem;max-width:72ch;line-height:1.7}
+.help-steps code{font-family:var(--f-mono);background:var(--sunk);padding:1px 6px;border-radius:6px}
+@media (max-width:520px){.help-steps>li{grid-template-columns:1fr}.help-num{width:34px;height:34px;font-size:1rem}}
 
 :root{--comb:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='97' viewBox='0 0 56 97'%3E%3Cpath d='M28 66L0 50V17L28 1l28 16v33L28 66zm0 32L0 82' fill='none' stroke='%23F59E0B' stroke-opacity='.14' stroke-width='1.5'/%3E%3C/svg%3E")}
 [hidden]{display:none!important} html{color-scheme:light} body{margin:0} img{max-width:100%}
@@ -3275,6 +3283,69 @@ A.settings = function () { _settingsOpen(); var m = topModal(); if (m && m.type 
 PAGE_VIEWS.perfil = vProfile;
 
 function ownsPlayer(p) { return !!(p && S.player && (p.id === S.player.uid || p.uid === S.player.uid)); }
+
+/* ===== Página "Como participar" (tutorial do jogador) ===== */
+PAGE_IDS.push("ajuda");
+(function () { if ((location.hash || "").slice(1) === "ajuda") S.page = "ajuda"; })();
+function fakeBtn(label, icon, kind) { return '<span class="btn sm ' + (kind || "") + '" style="pointer-events:none;vertical-align:middle">' + (icon ? ic(icon, "sm") : "") + esc(label) + "</span>"; }
+function vHelp() {
+  var url = location.href.split("#")[0];
+  var steps = [
+    { t: "Crie sua conta", i: "userplus", body:
+      "<p>No canto superior direito do site, toque em " + fakeBtn("Entrar", "users") + " e depois na aba <strong>Criar conta</strong>.</p>" +
+      "<ul><li><strong>Usuário:</strong> de 3 a 20 caracteres, só letras minúsculas, números, ponto, hífen ou sublinhado. Ex.: <code>rapha.tcg</code>.</li>" +
+      "<li><strong>Senha:</strong> pelo menos 8 caracteres. Anote em um lugar seguro, porque não existe recuperação por e-mail.</li>" +
+      "<li><strong>Nome nas chaves:</strong> como você quer aparecer nas mesas e na classificação. Use seu apelido de jogo.</li></ul>" +
+      "<p>Toque em " + fakeBtn("Criar conta", "userplus", "honey") + ". Você cai direto no seu perfil.</p>" },
+    { t: "Preencha seu cadastro", i: "edit", body:
+      "<p>Em <strong>Meu perfil</strong>, no quadro <strong>Meu cadastro</strong>:</p>" +
+      "<ul><li><strong>Deck / arquétipo:</strong> escolha da lista ou digite (ex.: <em>Mega Lopunny / Pidgeot</em>).</li>" +
+      "<li>Toque em " + fakeBtn("Detectar pelo nome do deck", "sparkles") + " para preencher os Pokémon principais. Se não reconhecer, digite os nomes.</li>" +
+      "<li>O <strong>tipo do deck</strong> define o ícone que aparece ao lado do seu nome. Deixe em <em>Auto</em> ou escolha um.</li></ul>" +
+      "<p>Toque em " + fakeBtn("Salvar cadastro", "check", "honey") + ".</p>" },
+    { t: "Anexe sua decklist", i: "image", body:
+      "<p>No jogo, abra o seu baralho e tire um <strong>print da tela com as 60 cartas</strong> visíveis.</p>" +
+      "<p>No perfil, toque em " + fakeBtn("Anexar foto da decklist", "upload") + " e escolha o print. Quando aparecer <span class=\"pill win\">Decklist salva</span>, está pronto.</p>" +
+      "<ul><li>Só você (pelo seu perfil) e o organizador podem anexar ou trocar a sua decklist.</li>" +
+      "<li>Você pode trocar a foto quantas vezes quiser <strong>até a Rodada 1 começar</strong>. Depois disso ela trava, e só o organizador altera.</li>" +
+      "<li>Pelo regulamento, você joga o torneio inteiro com a lista enviada.</li></ul>" },
+    { t: "Inscreva-se no torneio", i: "trophy", body:
+      "<p>Quando as inscrições abrirem, o menu <strong>Torneio</strong> mostra <span class=\"pill win\">Inscrições</span>. No seu perfil, no quadro <strong>Torneio atual</strong>, toque em " + fakeBtn("Inscrever-me com meu cadastro", "userplus", "honey") + ".</p>" +
+      "<ul><li>Com vaga, você entra na hora e aparece na lista de treinadores com seu deck e sua decklist.</li>" +
+      "<li>Com as vagas esgotadas, você entra na <strong>lista de espera</strong> e vê sua posição. Se alguém sair, você entra automaticamente.</li>" +
+      "<li>Mudou de ideia? " + fakeBtn("Cancelar inscrição", "userx", "danger") + " libera a vaga. Dá para se inscrever de novo enquanto estiver aberto.</li></ul>" },
+    { t: "No dia do torneio", i: "swords", body:
+      "<ul><li>O seu perfil mostra a <strong>mesa</strong> e o <strong>adversário</strong> de cada rodada. A página <strong>Torneio › Chaves & Rodadas</strong> tem todas as mesas.</li>" +
+      "<li>Na sua mesa, use " + fakeBtn("Marcar horário", "clock") + " para propor até 3 horários (com 1 hora de intervalo). O adversário confirma tocando em um deles.</li>" +
+      "<li>Terminou a partida? Reporte o resultado na mesa. O organizador confirma ao avançar a rodada.</li>" +
+      "<li>Precisa sair do torneio? No perfil, " + fakeBtn("Dar drop", "userx", "danger") + ". Você não recebe novas partidas e sua pontuação continua na classificação.</li></ul>" }
+  ];
+  var faq = [
+    ["Esqueci minha senha", "Fale com o organizador. Ele apaga a conta antiga e você cria outra com o mesmo nome nas chaves."],
+    ["Usei o celular de outra pessoa", "Abra o seu perfil e toque em <strong>Sair</strong>. O login fica salvo no aparelho até você sair."],
+    ["Quem vê meus dados?", "Nome nas chaves, deck e resultados aparecem para todos, como em qualquer torneio. Não pedimos e-mail, telefone nem documentos. Use apelido e não escreva nada pessoal nas observações."],
+    ["O botão de inscrição não aparece", "As inscrições ainda estão fechadas, ou falta salvar nome e deck no seu cadastro."]
+  ];
+  return '<section class="card pad stack"><span class="eyebrow">' + ic("book", "sm") + 'Guia do jogador</span><h2>Como participar</h2><p class="muted" style="max-width:68ch">Do cadastro à primeira partida em 5 passos. Leva uns 3 minutos e você só faz isso uma vez: nos próximos torneios, é só tocar em <strong>Inscrever-me</strong>.</p>' +
+    '<div class="row">' + (S.player ? '<button class="btn honey" data-a="page" data-p="perfil">' + ic("users", "sm") + "Ir para meu perfil</button>" : '<button class="btn honey" data-a="acc-open" data-tab="signup">' + ic("userplus", "sm") + 'Criar minha conta</button><button class="btn" data-a="acc-open" data-tab="login">' + ic("lock", "sm") + "Já tenho conta</button>") + '<button class="btn ghost" data-a="help-copy">' + ic("copy", "sm") + "Copiar link do guia</button></div></section>" +
+    '<ol class="help-steps">' + steps.map(function (s, i) {
+      return '<li class="card pad"><div class="help-num" aria-hidden="true">' + (i + 1) + '</div><div class="stack" style="gap:8px;min-width:0"><h3 class="row" style="gap:8px">' + ic(s.i) + esc(s.t) + "</h3>" + s.body + "</div></li>";
+    }).join("") + "</ol>" +
+    '<section class="card pad stack"><h3 class="row" style="gap:8px">' + ic("info") + 'Dúvidas comuns</h3><div class="list">' + faq.map(function (f) { return '<details class="li" style="display:block"><summary style="cursor:pointer;font-weight:800">' + f[0] + '</summary><p class="small" style="margin-top:6px">' + f[1] + "</p></details>"; }).join("") + "</div></section>";
+}
+PAGE_VIEWS.ajuda = vHelp;
+A["help-copy"] = function () { copyText(location.href.split("#")[0] + "#ajuda", "Link do guia copiado!"); };
+/* atalhos para o guia: rodapé, perfil vazio, cartão de inscrições e página de regras */
+var _vFooterH = vFooter;
+vFooter = function () { return _vFooterH().replace('<button data-a="page" data-p="rules">Regras do Suíço</button>', '<button data-a="page" data-p="ajuda">Como participar</button><button data-a="page" data-p="rules">Regras do Suíço</button>'); };
+var _vSignupPublicH = vSignupPublic;
+vSignupPublic = function () { var h = _vSignupPublicH(); return h ? h.replace("Inscreva-se pelo seu perfil de jogador, com seu deck e decklist já salvos.", 'Inscreva-se pelo seu perfil de jogador, com seu deck e decklist já salvos. <button class="btn sm ghost" data-a="page" data-p="ajuda" style="padding:0 4px;min-height:0;text-decoration:underline">Como participar</button>') : h; };
+var _vProfileH = vProfile;
+vProfile = function () { var h = _vProfileH(); return S.player ? h : h.replace("Já tenho conta</button></div>", 'Já tenho conta</button></div><button class="btn sm ghost" data-a="page" data-p="ajuda">' + ic("book", "sm") + "Ver o passo a passo</button>"); };
+PAGE_VIEWS.perfil = vProfile;
+var _vRulesH = vRules;
+vRules = function () { return _vRulesH().replace("Voltar ao Torneio Ao Vivo</button></div>", 'Voltar ao Torneio Ao Vivo</button><button class="btn honey" data-a="page" data-p="ajuda">' + ic("users", "sm") + "Como participar (cadastro e inscrição)</button></div>"); };
+PAGE_VIEWS.rules = vRules;
 
 /* início */
 applyTheme();
